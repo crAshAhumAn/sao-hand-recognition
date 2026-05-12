@@ -13,8 +13,9 @@
         <h1>Click to initialize hand detection</h1>
         <p class="hero-copy">
           Click anywhere on the page to start initialization, allow camera access,
-          and show one or both hands. The app configures the hand landmarks on screen,
-          draws a detection box, and labels each finger.
+          and show your left hand, right hand, or both hands. The app configures
+          the hand landmarks on screen, draws detection boxes, and labels each
+          hand as left or right.
         </p>
         <div class="actions">
           <button id="start-button" type="button">Initialize camera</button>
@@ -41,10 +42,18 @@
             <ol class="setup-list" aria-label="Initialization steps">
               <li data-step="mediapipe">Load MediaPipe model</li>
               <li data-step="camera">Connect camera</li>
-              <li data-step="hand">Find hand landmarks</li>
+              <li data-step="hand">Find left/right hand landmarks</li>
               <li data-step="fingers">Configure fingers</li>
             </ol>
-            <p id="detection-box-label" class="box-label">Detection box: waiting</p>
+            <div class="hand-slots" aria-label="Left and right hand initialization">
+              <div class="hand-slot" data-hand-slot="Left">
+                Left hand <span>waiting</span>
+              </div>
+              <div class="hand-slot" data-hand-slot="Right">
+                Right hand <span>waiting</span>
+              </div>
+            </div>
+            <p id="detection-box-label" class="box-label">Detection boxes: waiting</p>
           </div>
           <div id="index-result" class="index-result waiting">Index finger not detected</div>
           <dl class="stats-grid">
@@ -91,7 +100,7 @@
           <li>Camera frames stay in the browser; no server upload is required.</li>
           <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
           <li>Click anywhere on the page to initialize camera detection.</li>
-          <li>Show one hand or both hands to draw separate detection boxes.</li>
+          <li>Show left hand, right hand, or both hands to draw labeled detection boxes.</li>
           <li>Press <kbd>Esc</kbd> to stop the camera.</li>
         </ul>
       </section>
