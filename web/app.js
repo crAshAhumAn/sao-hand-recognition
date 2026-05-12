@@ -8,6 +8,13 @@ const emptyState = document.querySelector("#empty-state");
 const indexResult = document.querySelector("#index-result");
 const fingerCount = document.querySelector("#finger-count");
 const handState = document.querySelector("#hand-state");
+const detectionBoxLabel = document.querySelector("#detection-box-label");
+const stepItems = new Map(
+  Array.from(document.querySelectorAll("[data-step]")).map((item) => [
+    item.dataset.step,
+    item,
+  ]),
+);
 const fingerItems = new Map(
   Array.from(document.querySelectorAll("[data-finger]")).map((item) => [
     item.dataset.finger,
@@ -27,9 +34,28 @@ const HAND_CONNECTIONS = window.HAND_CONNECTIONS ?? [];
 let hands = null;
 let camera = null;
 let isRunning = false;
+let isInitializing = false;
 
-function setStatus(message) {
+function setStatus(message, state = "") {
   statusMessage.textContent = message;
+  statusMessage.classList.toggle("initializing", state === "initializing");
+  statusMessage.classList.toggle("ready", state === "ready");
+}
+
+function setStep(name, state) {
+  const item = stepItems.get(name);
+  if (!item) {
+    return;
+  }
+
+  item.classList.toggle("active", state === "active");
+  item.classList.toggle("done", state === "done");
+}
+
+function resetSteps() {
+  for (const item of stepItems.values()) {
+    item.classList.remove("active", "done");
+  }
 }
 
 function distance(pointA, pointB) {
@@ -95,6 +121,23 @@ function detectFingers(landmarks, minAngleDegrees = 150, distanceMargin = 0.03) 
   };
 }
 
+function getHandBoundingBox(landmarks, padding = 0.045) {
+  const xs = landmarks.map((point) => point.x);
+  const ys = landmarks.map((point) => point.y);
+  const minX = Math.max(0, Math.min(...xs) - padding);
+  const maxX = Math.min(1, Math.max(...xs) + padding);
+  const minY = Math.max(0, Math.min(...ys) - padding);
+  const maxY = Math.min(1, Math.max(...ys) + padding);
+
+  return {
+    x: minX * canvasElement.width,
+    y: minY * canvasElement.height,
+    width: (maxX - minX) * canvasElement.width,
+    height: (maxY - minY) * canvasElement.height,
+    normalized: { minX, minY, maxX, maxY },
+  };
+}
+
 function resizeCanvasToDisplaySize() {
   const rect = canvasElement.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect.width));
@@ -120,9 +163,33 @@ function drawFingerTip(detection) {
   canvasCtx.fillText(detection.name, x + 12, y - 10);
 }
 
-function updateResults(state) {
+function drawDetectionBox(box) {
+  canvasCtx.save();
+  canvasCtx.strokeStyle = "#44d7a8";
+  canvasCtx.lineWidth = 4;
+  canvasCtx.shadowColor = "rgba(68, 215, 168, 0.85)";
+  canvasCtx.shadowBlur = 16;
+  canvasCtx.strokeRect(box.x, box.y, box.width, box.height);
+  canvasCtx.shadowBlur = 0;
+  canvasCtx.fillStyle = "rgba(4, 18, 14, 0.82)";
+  canvasCtx.fillRect(box.x, Math.max(0, box.y - 30), 154, 26);
+  canvasCtx.fillStyle = "#b9ffe8";
+  canvasCtx.font = "700 14px system-ui, sans-serif";
+  canvasCtx.fillText("Hand detected", box.x + 10, Math.max(18, box.y - 11));
+  canvasCtx.restore();
+}
+
+function updateDetectionBoxLabel(box) {
+  const { minX, minY, maxX, maxY } = box.normalized;
+  detectionBoxLabel.textContent =
+    `Detection box: x ${minX.toFixed(2)}-${maxX.toFixed(2)}, ` +
+    `y ${minY.toFixed(2)}-${maxY.toFixed(2)}`;
+}
+
+function updateResults(state, box) {
   handState.textContent = "Yes";
   fingerCount.textContent = state.extendedCount;
+  updateDetectionBoxLabel(box);
   indexResult.textContent = state.index.isExtended
     ? "Index finger detected"
     : "Index finger not detected";
@@ -135,25 +202,31 @@ function updateResults(state) {
       continue;
     }
     item.classList.toggle("active", detection.isExtended);
-    item.querySelector("span").textContent = detection.isExtended ? "on" : "off";
+    item.querySelector(".finger-state").textContent = detection.isExtended ? "on" : "off";
+    item.querySelector(".finger-angle").textContent =
+      `Angle: ${Math.round(detection.angleDegrees)} deg`;
   }
 }
 
 function resetResults() {
   handState.textContent = "No";
   fingerCount.textContent = "0";
+  detectionBoxLabel.textContent = "Detection box: waiting";
   indexResult.textContent = "Index finger not detected";
   indexResult.classList.remove("detected");
   indexResult.classList.add("waiting");
 
   for (const item of fingerItems.values()) {
     item.classList.remove("active");
-    item.querySelector("span").textContent = "off";
+    item.querySelector(".finger-state").textContent = "off";
+    item.querySelector(".finger-angle").textContent = "Angle: --";
   }
 }
 
 function drawNoHandFrame() {
   resetResults();
+  setStep("hand", "active");
+  setStep("fingers", "");
   canvasCtx.font = "700 22px system-ui, sans-serif";
   canvasCtx.fillStyle = "#ffd99e";
   canvasCtx.fillText("Show one hand to the camera", 24, 44);
@@ -176,6 +249,8 @@ function onResults(results) {
     return;
   }
 
+  setStep("hand", "done");
+  setStep("fingers", "active");
   window.drawConnectors?.(canvasCtx, handLandmarks, HAND_CONNECTIONS, {
     color: "#44d7a8",
     lineWidth: 4,
@@ -186,9 +261,12 @@ function onResults(results) {
     radius: 3,
   });
 
+  const box = getHandBoundingBox(handLandmarks);
+  drawDetectionBox(box);
   const state = detectFingers(handLandmarks);
   state.detections.forEach(drawFingerTip);
-  updateResults(state);
+  updateResults(state, box);
+  setStep("fingers", "done");
   canvasCtx.restore();
 }
 
@@ -214,12 +292,23 @@ function createHandsPipeline() {
 }
 
 async function startCamera() {
+  if (isRunning || isInitializing) {
+    return;
+  }
+
   try {
+    isInitializing = true;
+    resetSteps();
+    resetResults();
     ensureMediaPipeLoaded();
     startButton.disabled = true;
-    setStatus("Starting camera...");
+    setStep("mediapipe", "active");
+    setStatus("Initializing MediaPipe hand model...", "initializing");
 
     hands = hands ?? createHandsPipeline();
+    setStep("mediapipe", "done");
+    setStep("camera", "active");
+    setStatus("Waiting for camera permission...", "initializing");
     camera = new window.Camera(videoElement, {
       onFrame: async () => {
         await hands.send({ image: videoElement });
@@ -230,15 +319,20 @@ async function startCamera() {
 
     isRunning = true;
     await camera.start();
+    setStep("camera", "done");
+    setStep("hand", "active");
     emptyState.classList.add("hidden");
     stopButton.disabled = false;
-    setStatus("Camera is running. Extend your index finger.");
+    setStatus("Camera is running. Show your hand inside the frame.", "ready");
   } catch (error) {
     isRunning = false;
+    resetSteps();
     startButton.disabled = false;
     stopButton.disabled = true;
     setStatus(error.message);
     console.error(error);
+  } finally {
+    isInitializing = false;
   }
 }
 
@@ -260,13 +354,21 @@ function stopCamera() {
   startButton.disabled = false;
   stopButton.disabled = true;
   emptyState.classList.remove("hidden");
+  resetSteps();
   resetResults();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  setStatus("Camera is off.");
+  setStatus("Click the page or the initialize button to begin.");
 }
 
 startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", stopCamera);
+document.addEventListener("click", (event) => {
+  if (event.target.closest("#stop-button")) {
+    return;
+  }
+
+  startCamera();
+});
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && isRunning) {
     stopCamera();
@@ -275,3 +377,4 @@ window.addEventListener("keydown", (event) => {
 
 resizeCanvasToDisplaySize();
 resetResults();
+resetSteps();

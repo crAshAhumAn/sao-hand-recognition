@@ -116,6 +116,14 @@ h2 {
   color: #99abbd;
 }
 
+.status.initializing {
+  color: #ffd99e;
+}
+
+.status.ready {
+  color: #72ffd0;
+}
+
 .recognition-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -169,6 +177,53 @@ h2 {
   padding: 1.25rem;
 }
 
+.configuration-panel {
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.configuration-panel h3 {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+.setup-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 0.9rem;
+  padding-left: 1.25rem;
+  color: #9fb0c3;
+}
+
+.setup-list li {
+  padding-left: 0.2rem;
+}
+
+.setup-list li.active {
+  color: #ffd99e;
+}
+
+.setup-list li.done {
+  color: #72ffd0;
+}
+
+.setup-list li.done::marker {
+  content: "+ ";
+}
+
+.setup-list li.active::marker {
+  content: "* ";
+}
+
+.box-label {
+  margin: 0;
+  color: #c7d7e8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+}
+
 .index-result {
   border-radius: 1rem;
   margin-bottom: 1rem;
@@ -217,7 +272,9 @@ h2 {
 
 .finger-list li {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   border-radius: 0.85rem;
   padding: 0.75rem 0.85rem;
   background: rgba(255, 255, 255, 0.06);
@@ -229,7 +286,18 @@ h2 {
   color: #ecfff8;
 }
 
-.finger-list span {
+.finger-list strong {
+  display: block;
+}
+
+.finger-list small {
+  display: block;
+  margin-top: 0.18rem;
+  color: #8294a7;
+  font-size: 0.76rem;
+}
+
+.finger-list .finger-state {
   font-weight: 900;
   text-transform: uppercase;
 }
