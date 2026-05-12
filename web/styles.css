@@ -413,6 +413,10 @@ h2 {
   }
 
   .video-frame {
-    max-height: 48vh;
+  max-height: 48vh;  /* 48% of viewport height */
+  max-width: 80vw;   /* 80% of viewport width */
+  /* or */
+  height: 30vh;      /* Fixed 30% of viewport height */
+  width: 50vw;       /* 50% of viewport width */
   }
 }
