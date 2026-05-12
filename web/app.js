@@ -43,6 +43,10 @@ const HAND_COLORS = {
   Right: "#44d7a8",
   Unknown: "#ffd166",
 };
+const MIRRORED_HANDEDNESS = {
+  Left: "Right",
+  Right: "Left",
+};
 let hands = null;
 let camera = null;
 let isRunning = false;
@@ -168,12 +172,13 @@ function getHandednessLabel(results, handLandmarks, index) {
   const label = directLabel ?? classificationLabel ?? arrayLabel;
 
   if (label === "Left" || label === "Right") {
-    return label;
+    // MediaPipe Hands labels are mirrored for this browser camera flow.
+    return MIRRORED_HANDEDNESS[label];
   }
 
   // Fallback for browsers/CDNs that omit MediaPipe handedness metadata.
-  // Smaller x means the hand appears on the left side of the camera image.
-  return handLandmarks[0]?.x < 0.5 ? "Left" : "Right";
+  // Smaller x means the hand appears on the left side of the displayed image.
+  return handLandmarks[0]?.x < 0.5 ? "Right" : "Left";
 }
 
 function resizeCanvasToDisplaySize() {
