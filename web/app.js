@@ -10,6 +10,12 @@ const fingerCount = document.querySelector("#finger-count");
 const handState = document.querySelector("#hand-state");
 const detectionBoxLabel = document.querySelector("#detection-box-label");
 const handsList = document.querySelector("#hands-list");
+const handSlotItems = new Map(
+  Array.from(document.querySelectorAll("[data-hand-slot]")).map((item) => [
+    item.dataset.handSlot,
+    item,
+  ]),
+);
 const stepItems = new Map(
   Array.from(document.querySelectorAll("[data-step]")).map((item) => [
     item.dataset.step,
@@ -32,7 +38,11 @@ const FINGER_SPECS = [
 ];
 
 const HAND_CONNECTIONS = window.HAND_CONNECTIONS ?? [];
-const HAND_COLORS = ["#44d7a8", "#65a8ff"];
+const HAND_COLORS = {
+  Left: "#65a8ff",
+  Right: "#44d7a8",
+  Unknown: "#ffd166",
+};
 let hands = null;
 let camera = null;
 let isRunning = false;
@@ -57,6 +67,16 @@ function setStep(name, state) {
 function resetSteps() {
   for (const item of stepItems.values()) {
     item.classList.remove("active", "done");
+  }
+}
+
+function updateHandSlots(handResults = []) {
+  for (const [slotName, item] of handSlotItems.entries()) {
+    const handResult = handResults.find((result) => result.handedness === slotName);
+    const status = item.querySelector("span");
+
+    item.classList.toggle("detected", Boolean(handResult));
+    status.textContent = handResult ? "detected" : "waiting";
   }
 }
 
@@ -138,6 +158,22 @@ function getHandBoundingBox(landmarks, padding = 0.045) {
     height: (maxY - minY) * canvasElement.height,
     normalized: { minX, minY, maxX, maxY },
   };
+}
+
+function getHandednessLabel(results, handLandmarks, index) {
+  const handedness = results.multiHandedness?.[index];
+  const directLabel = handedness?.label;
+  const classificationLabel = handedness?.classification?.[0]?.label;
+  const arrayLabel = handedness?.[0]?.label;
+  const label = directLabel ?? classificationLabel ?? arrayLabel;
+
+  if (label === "Left" || label === "Right") {
+    return label;
+  }
+
+  // Fallback for browsers/CDNs that omit MediaPipe handedness metadata.
+  // Smaller x means the hand appears on the left side of the camera image.
+  return handLandmarks[0]?.x < 0.5 ? "Left" : "Right";
 }
 
 function resizeCanvasToDisplaySize() {
@@ -262,6 +298,7 @@ function updateResults(handResults) {
   handState.textContent = String(handResults.length);
   fingerCount.textContent = String(totalExtendedFingers);
   updateDetectionBoxLabel(handResults);
+  updateHandSlots(handResults);
   updateHandCards(handResults);
   indexResult.textContent = anyIndexExtended
     ? "Index finger detected"
@@ -290,6 +327,7 @@ function resetResults() {
   handState.textContent = "0";
   fingerCount.textContent = "0";
   detectionBoxLabel.textContent = "Detection boxes: waiting";
+  updateHandSlots([]);
   updateHandCards([]);
   indexResult.textContent = "Index finger not detected";
   indexResult.classList.remove("detected");
@@ -308,7 +346,7 @@ function drawNoHandFrame() {
   setStep("fingers", "");
   canvasCtx.font = "700 22px system-ui, sans-serif";
   canvasCtx.fillStyle = "#ffd99e";
-  canvasCtx.fillText("Show one or both hands to the camera", 24, 44);
+  canvasCtx.fillText("Show your left hand, right hand, or both hands", 24, 44);
 }
 
 function onResults(results) {
@@ -331,9 +369,9 @@ function onResults(results) {
   setStep("hand", "done");
   setStep("fingers", "active");
   const handResults = detectedHands.slice(0, 2).map((handLandmarks, index) => {
-    const color = HAND_COLORS[index] ?? HAND_COLORS[0];
-    const handednessLabel = results.multiHandedness?.[index]?.label;
-    const label = handednessLabel ? `${handednessLabel} hand` : `Hand ${index + 1}`;
+    const handedness = getHandednessLabel(results, handLandmarks, index);
+    const color = HAND_COLORS[handedness] ?? HAND_COLORS.Unknown;
+    const label = `${handedness} hand`;
     const box = getHandBoundingBox(handLandmarks);
     const state = detectFingers(handLandmarks);
 
@@ -349,7 +387,11 @@ function onResults(results) {
 
     drawDetectionBox(box, label, color);
     state.detections.forEach((detection) => drawFingerTip(detection, color));
-    return { label, color, box, state };
+    return { label, handedness, color, box, state };
+  });
+  handResults.sort((a, b) => {
+    const order = { Left: 0, Right: 1 };
+    return (order[a.handedness] ?? 2) - (order[b.handedness] ?? 2);
   });
   updateResults(handResults);
   setStep("fingers", "done");
@@ -409,7 +451,7 @@ async function startCamera() {
     setStep("hand", "active");
     emptyState.classList.add("hidden");
     stopButton.disabled = false;
-    setStatus("Camera is running. Show one or both hands inside the frame.", "ready");
+    setStatus("Camera is running. Show left hand, right hand, or both hands.", "ready");
   } catch (error) {
     isRunning = false;
     resetSteps();
