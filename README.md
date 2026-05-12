@@ -1,8 +1,8 @@
 # sao-hand-recognition
 
 Starter code for hand recognition. The first milestone is finger detection:
-the browser app locates a hand with MediaPipe, detects the index finger first,
-then reports all extended fingers.
+the browser app locates one or both hands with MediaPipe, detects index fingers
+first, then reports all extended fingers.
 
 ## Run the website
 
@@ -18,9 +18,10 @@ python3 -m http.server 6463
 ```
 
 Open <http://localhost:6463>, click anywhere on the page to initialize the
-camera, and show one hand. The page displays initialization steps, the live
-finger configuration, and a detection box around the hand captured by the
-camera. Press **Stop camera** or `Esc` to release the webcam.
+camera, and show one or both hands. The page displays initialization steps,
+live per-hand finger configuration, and a separate detection box around each
+hand captured by the camera. Press **Stop camera** or `Esc` to release the
+webcam.
 
 ## Python desktop demo setup
 
@@ -46,7 +47,7 @@ python -m hand_recognition.webcam
 
 Controls:
 
-- Show one hand to the camera.
+- Show one or both hands to the camera.
 - Extend your index finger to see `Index finger detected`.
 - Press `q` or `Esc` to quit.
 
@@ -60,7 +61,7 @@ finger-detector --no-mirror
 ## How it works
 
 - `web/index.html`, `web/styles.css`, and `web/app.js` provide a browser-based
-  hand recognition application.
+  hand recognition application that tracks up to two hands.
 - `src/hand_recognition/webcam.py` captures webcam frames and asks MediaPipe
   for 21 hand landmarks.
 - `src/hand_recognition/finger_detector.py` checks finger joint angles and
