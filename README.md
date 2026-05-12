@@ -10,14 +10,14 @@ The public GitHub Pages site is:
 
 <https://crashahuman.github.io/sao-hand-recognition/>
 
-The web app is in `web/` and does not need a build step. It uses your browser's
-camera APIs, so serve it from `localhost` or HTTPS:
+The web app does not need a build step. It uses your browser's camera APIs, so
+serve it from `localhost` or HTTPS:
 
 ```bash
-python3 -m http.server --directory web 8000
+python3 -m http.server 6463
 ```
 
-Open <http://localhost:8000>, click anywhere on the page to initialize the
+Open <http://localhost:6463>, click anywhere on the page to initialize the
 camera, and show one hand. The page displays initialization steps, the live
 finger configuration, and a detection box around the hand captured by the
 camera. Press **Stop camera** or `Esc` to release the webcam.
