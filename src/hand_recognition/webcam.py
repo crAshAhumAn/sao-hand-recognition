@@ -76,7 +76,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-hands",
         type=int,
-        default=1,
+        default=2,
         help="Maximum number of hands to track.",
     )
     parser.add_argument(
