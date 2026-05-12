@@ -55,9 +55,9 @@ kbd {
 }
 
 .app-shell {
-  width: min(1180px, calc(100% - 2rem));
+  width: min(1040px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 3rem 0;
+  padding: clamp(1rem, 3vw, 2.25rem) 0;
 }
 
 .hero {
@@ -126,9 +126,10 @@ h2 {
 
 .recognition-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 720px) minmax(280px, 320px);
   gap: 1rem;
   align-items: stretch;
+  justify-content: center;
 }
 
 .video-frame,
@@ -145,6 +146,7 @@ h2 {
   position: relative;
   overflow: hidden;
   aspect-ratio: 16 / 9;
+  max-height: min(58vh, 520px);
 }
 
 #input-video,
@@ -403,10 +405,14 @@ h2 {
 
 @media (max-width: 860px) {
   .app-shell {
-    padding: 2rem 0;
+    padding: 1rem 0;
   }
 
   .recognition-card {
     grid-template-columns: 1fr;
+  }
+
+  .video-frame {
+    max-height: 48vh;
   }
 }
