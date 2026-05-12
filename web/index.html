@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAO Hand Recognition</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <p class="eyebrow">Hand recognition starter</p>
+        <h1>Detect your finger in the browser</h1>
+        <p class="hero-copy">
+          Start the camera, show one hand, and extend your index finger. The app
+          detects hand landmarks locally in your browser and labels extended fingers.
+        </p>
+        <div class="actions">
+          <button id="start-button" type="button">Start camera</button>
+          <button id="stop-button" type="button" disabled>Stop camera</button>
+        </div>
+        <p id="status-message" class="status" role="status">Camera is off.</p>
+      </section>
+
+      <section class="recognition-card" aria-label="Finger recognition camera">
+        <div class="video-frame">
+          <video id="input-video" playsinline></video>
+          <canvas id="output-canvas" width="1280" height="720"></canvas>
+          <div id="empty-state" class="empty-state">
+            <span>Camera preview will appear here</span>
+          </div>
+        </div>
+
+        <aside class="results-panel">
+          <h2>Live detection</h2>
+          <div id="index-result" class="index-result waiting">Index finger not detected</div>
+          <dl class="stats-grid">
+            <div>
+              <dt>Extended fingers</dt>
+              <dd id="finger-count">0</dd>
+            </div>
+            <div>
+              <dt>Detected hand</dt>
+              <dd id="hand-state">No</dd>
+            </div>
+          </dl>
+          <ul id="finger-list" class="finger-list" aria-label="Finger states">
+            <li data-finger="thumb">Thumb <span>off</span></li>
+            <li data-finger="index">Index <span>off</span></li>
+            <li data-finger="middle">Middle <span>off</span></li>
+            <li data-finger="ring">Ring <span>off</span></li>
+            <li data-finger="pinky">Pinky <span>off</span></li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="notes">
+        <h2>Privacy and setup notes</h2>
+        <ul>
+          <li>Camera frames stay in the browser; no server upload is required.</li>
+          <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
+          <li>Press <kbd>Esc</kbd> to stop the camera.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
