@@ -6,6 +6,10 @@ then reports all extended fingers.
 
 ## Run the website
 
+The public GitHub Pages site is:
+
+<https://crashahuman.github.io/sao-hand-recognition/>
+
 The web app is in `web/` and does not need a build step. It uses your browser's
 camera APIs, so serve it from `localhost` or HTTPS:
 

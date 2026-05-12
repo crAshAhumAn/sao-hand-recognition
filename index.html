@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAO Hand Recognition</title>
+    <link rel="stylesheet" href="./web/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <p class="eyebrow">Hand recognition starter</p>
+        <h1>Click to initialize hand detection</h1>
+        <p class="hero-copy">
+          Click anywhere on the page to start initialization, allow camera access,
+          and show one hand. The app configures the hand landmarks on screen,
+          draws a detection box, and labels each finger.
+        </p>
+        <div class="actions">
+          <button id="start-button" type="button">Initialize camera</button>
+          <button id="stop-button" type="button" disabled>Stop camera</button>
+        </div>
+        <p id="status-message" class="status" role="status">
+          Click the page or the initialize button to begin.
+        </p>
+      </section>
+
+      <section class="recognition-card" aria-label="Finger recognition camera">
+        <div class="video-frame">
+          <video id="input-video" playsinline></video>
+          <canvas id="output-canvas" width="1280" height="720"></canvas>
+          <div id="empty-state" class="empty-state">
+            <span>Click anywhere to initialize the camera</span>
+          </div>
+        </div>
+
+        <aside class="results-panel">
+          <h2>Live detection</h2>
+          <div class="configuration-panel">
+            <h3>Initialization</h3>
+            <ol class="setup-list" aria-label="Initialization steps">
+              <li data-step="mediapipe">Load MediaPipe model</li>
+              <li data-step="camera">Connect camera</li>
+              <li data-step="hand">Find hand landmarks</li>
+              <li data-step="fingers">Configure fingers</li>
+            </ol>
+            <p id="detection-box-label" class="box-label">Detection box: waiting</p>
+          </div>
+          <div id="index-result" class="index-result waiting">Index finger not detected</div>
+          <dl class="stats-grid">
+            <div>
+              <dt>Extended fingers</dt>
+              <dd id="finger-count">0</dd>
+            </div>
+            <div>
+              <dt>Detected hand</dt>
+              <dd id="hand-state">No</dd>
+            </div>
+          </dl>
+          <ul id="finger-list" class="finger-list" aria-label="Finger states">
+            <li data-finger="thumb">
+              <div><strong>Thumb</strong><small class="finger-angle">Angle: --</small></div>
+              <span class="finger-state">off</span>
+            </li>
+            <li data-finger="index">
+              <div><strong>Index</strong><small class="finger-angle">Angle: --</small></div>
+              <span class="finger-state">off</span>
+            </li>
+            <li data-finger="middle">
+              <div><strong>Middle</strong><small class="finger-angle">Angle: --</small></div>
+              <span class="finger-state">off</span>
+            </li>
+            <li data-finger="ring">
+              <div><strong>Ring</strong><small class="finger-angle">Angle: --</small></div>
+              <span class="finger-state">off</span>
+            </li>
+            <li data-finger="pinky">
+              <div><strong>Pinky</strong><small class="finger-angle">Angle: --</small></div>
+              <span class="finger-state">off</span>
+            </li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="notes">
+        <h2>Privacy and setup notes</h2>
+        <ul>
+          <li>Camera frames stay in the browser; no server upload is required.</li>
+          <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
+          <li>Click anywhere on the page to initialize camera detection.</li>
+          <li>Press <kbd>Esc</kbd> to stop the camera.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script type="module" src="./web/app.js"></script>
+  </body>
+</html>
