@@ -54,5 +54,5 @@ finger-detector --no-mirror
 The core finger-state logic does not need a webcam or MediaPipe to test:
 
 ```bash
-python -m unittest
+PYTHONPATH=src python -m unittest discover -s tests
 ```
