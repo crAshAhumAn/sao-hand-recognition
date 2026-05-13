@@ -338,7 +338,7 @@ h2 {
 
 .video-frame {
   width: 100%;
-  height: min(68vh, calc((100vw - 29rem) * 9 / 16));
+  height: 100%;
   min-height: 360px;
   aspect-ratio: 16 / 9;
   overflow: hidden;
