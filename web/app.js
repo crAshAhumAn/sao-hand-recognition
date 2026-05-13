@@ -107,7 +107,7 @@ function detectFingers(landmarks, minAngleDegrees = 150, distanceMargin = 0.03) 
   if (!landmarks || landmarks.length < 21) {
     throw new Error("Expected 21 hand landmarks.");
   }
-
+ 
   const wrist = landmarks[0];
   const detections = FINGER_SPECS.map(
     ([name, proximalIndex, jointIndex, tipIndex, baseIndex]) => {
