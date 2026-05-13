@@ -490,18 +490,11 @@ function stopCamera() {
   resetSteps();
   resetResults();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  setStatus("Click the page or the initialize button to begin.");
+  setStatus("Press Initialize scanner to begin.");
 }
 
 startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", stopCamera);
-document.addEventListener("click", (event) => {
-  if (event.target.closest("#stop-button")) {
-    return;
-  }
-
-  startCamera();
-});
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && isRunning) {
     stopCamera();
