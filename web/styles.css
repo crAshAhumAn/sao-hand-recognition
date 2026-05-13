@@ -253,7 +253,7 @@ h2 {
   left: 0.65rem;
   color: rgba(68, 244, 255, 0.75);
   font-size: 0.68rem;
-  content: "STAGE";
+  content: "STEP";
 }
 
 .setup-list li.active {
@@ -270,11 +270,11 @@ h2 {
 }
 
 .setup-list li.done::before {
-  content: "CLEAR";
+  content: "DONE";
 }
 
 .setup-list li.active::before {
-  content: "LIVE";
+  content: "ACTIVE";
 }
 
 .hand-slots {

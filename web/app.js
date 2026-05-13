@@ -351,7 +351,7 @@ function drawNoHandFrame() {
   setStep("fingers", "");
   canvasCtx.font = "700 22px system-ui, sans-serif";
   canvasCtx.fillStyle = "#ffd99e";
-  canvasCtx.fillText("Show your left hand, right hand, or both hands", 24, 44);
+  canvasCtx.fillText("Present left hand, right hand, or both hands", 24, 44);
 }
 
 function onResults(results) {
@@ -456,7 +456,7 @@ async function startCamera() {
     setStep("hand", "active");
     emptyState.classList.add("hidden");
     stopButton.disabled = false;
-    setStatus("Camera is running. Show left hand, right hand, or both hands.", "ready");
+    setStatus("Camera is active. Present left hand, right hand, or both hands.", "ready");
   } catch (error) {
     isRunning = false;
     resetSteps();
@@ -490,7 +490,7 @@ function stopCamera() {
   resetSteps();
   resetResults();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  setStatus("Press Initialize scanner to begin.");
+  setStatus("Press Initialize camera to begin.");
 }
 
 startButton.addEventListener("click", startCamera);

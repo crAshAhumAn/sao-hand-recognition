@@ -9,25 +9,16 @@
   <body>
     <main class="app-shell">
       <section class="top-hud" aria-label="Scanner setup">
-        <header class="hero">
-          <p class="eyebrow">SAO hand recognition</p>
-          <h1>Hand Scanner Arena</h1>
-          <p class="hero-copy">
-            Detect and configure left hand, right hand, or both hands in a live
-            camera scanner.
-          </p>
-        </header>
-
         <div class="configuration-panel">
           <div class="panel-title-row">
-            <p class="eyebrow">Initialization procedure</p>
-            <h2>Mission checklist</h2>
+            <p class="eyebrow">Hand recognition system</p>
+            <h2>Initialization procedure</h2>
           </div>
           <ol class="setup-list" aria-label="Initialization steps">
-            <li data-step="mediapipe">Load model</li>
-            <li data-step="camera">Connect camera</li>
-            <li data-step="hand">Lock left/right hands</li>
-            <li data-step="fingers">Configure fingers</li>
+            <li data-step="mediapipe">Load hand model</li>
+            <li data-step="camera">Activate camera</li>
+            <li data-step="hand">Identify hands</li>
+            <li data-step="fingers">Analyze fingers</li>
           </ol>
           <div class="hand-slots" aria-label="Left and right hand initialization">
             <div class="hand-slot" data-hand-slot="Left">
@@ -42,11 +33,11 @@
 
         <div class="controls-panel">
           <div class="actions">
-            <button id="start-button" type="button">Initialize scanner</button>
-            <button id="stop-button" type="button" disabled>Stop scanner</button>
+            <button id="start-button" type="button">Initialize camera</button>
+            <button id="stop-button" type="button" disabled>Stop camera</button>
           </div>
           <p id="status-message" class="status" role="status">
-            Press Initialize scanner to begin.
+            Press Initialize camera to begin.
           </p>
         </div>
       </section>
@@ -57,7 +48,7 @@
             <video id="input-video" playsinline></video>
             <canvas id="output-canvas" width="1280" height="720"></canvas>
             <div id="empty-state" class="empty-state">
-              <span>Press Initialize scanner to turn on the camera</span>
+              <span>Press Initialize camera to turn on the camera</span>
             </div>
           </div>
         </div>
@@ -65,8 +56,8 @@
         <aside class="results-panel" aria-label="Detection results">
           <div class="results-header">
             <div>
-              <p class="eyebrow">Battle telemetry</p>
-              <h2>Detection result</h2>
+              <p class="eyebrow">Recognition output</p>
+              <h2>Detection results</h2>
             </div>
             <div id="index-result" class="index-result waiting">Index finger not detected</div>
           </div>
@@ -113,7 +104,7 @@
         <ul>
           <li>Camera frames stay in the browser; no server upload is required.</li>
           <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
-          <li>Press <strong>Initialize scanner</strong> to turn on camera detection.</li>
+          <li>Press <strong>Initialize camera</strong> to turn on camera detection.</li>
           <li>Show left hand, right hand, or both hands to draw labeled detection boxes.</li>
           <li>Press <kbd>Esc</kbd> to stop the camera.</li>
         </ul>
