@@ -1,114 +1,733 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SAO Hand Recognition</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <main class="app-shell">
-      <section class="hero">
-        <p class="eyebrow">Hand recognition starter</p>
-        <h1>Click to initialize hand detection</h1>
-        <p class="hero-copy">
-          Click the button to start initialization, allow camera access,
-          and show your left hand, right hand, or both hands. The app configures
-          the hand landmarks on screen, draws detection boxes, and labels each
-          hand as left or right.
-        </p>
-        <div class="actions">
-          <button id="start-button" type="button">Initialize camera</button>
-          <button id="stop-button" type="button" disabled>Stop camera</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Hand Tracking Interface | SAO HUD</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+      font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    /* main container */
+    .sao-container {
+      width: 100%;
+      max-width: 1920px;
+      height: 95vh;
+      display: flex;
+      flex-direction: column;
+      background: rgba(10, 20, 30, 0.55);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    /* TITLE on top */
+    .sao-header {
+      text-align: center;
+      padding: 0.8rem 1rem 0.4rem 1rem;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 255, 255, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+    }
+    .sao-header h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #aaffff, #3cc7ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    .sao-header p {
+      font-size: 0.75rem;
+      color: #8eccff;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    /* instruction (setup) below the title - rectangular style */
+    .setup-instruction {
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      margin: 0.6rem 1rem 0.4rem 1rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border: 1px solid #2affd0;
+      box-shadow: 0 0 6px #00e0ff40;
+    }
+    .setup-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .setup-text .setup-label {
+      color: #3effe6;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+    .setup-steps {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #cccccc;
+      line-height: 1.4;
+    }
+    .setup-steps strong {
+      color: #0ff;
+      font-weight: 600;
+    }
+
+    /* BUTTONS below instruction */
+    .button-bar {
+      display: flex;
+      gap: 1rem;
+      padding: 0.2rem 1rem 0.6rem 1rem;
+      justify-content: center;
+      z-index: 10;
+    }
+    .action-btn {
+      background: linear-gradient(95deg, #11161f, #02070e);
+      border: 1.5px solid #2affc0;
+      color: #bbffff;
+      font-weight: bold;
+      padding: 0.55rem 1.8rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.2s;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      font-family: inherit;
+    }
+    .action-btn:hover:not(:disabled) {
+      background: #1a7c7c30;
+      border-color: #6effe0;
+      color: white;
+      transform: scale(0.98);
+      box-shadow: 0 0 10px cyan;
+    }
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: #777;
+    }
+    #status-message {
+      font-size: 0.7rem;
+      background: #000000aa;
+      border-radius: 8px;
+      padding: 0.3rem 1rem;
+      margin: 0 1rem;
+      text-align: center;
+      color: #aaffdd;
+      white-space: nowrap;
+      overflow-x: auto;
+      font-family: monospace;
+    }
+
+    /* MAIN FLEX ROW: video (large) + result sidebar */
+    .main-live-area {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+      min-height: 0;
+      margin: 0.5rem 1rem 1rem 1rem;
+      background: #00000055;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+      border: 1px solid #2affc044;
+    }
+
+    /* VIDEO FRAME — as large as possible */
+    .video-master {
+      flex: 3;
+      position: relative;
+      background: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.6), 0 4px 20px black;
+    }
+    .video-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #010101;
+    }
+    #input-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      border-radius: 1rem;
+    }
+    #output-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 1rem;
+      pointer-events: none;
+    }
+    .empty-state {
+      position: absolute;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(12px);
+      color: #3cc7ff;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      z-index: 5;
+      pointer-events: none;
+      font-size: 0.9rem;
+      border: 1px solid #2affc0;
+      font-family: monospace;
+    }
+
+    /* RIGHT HAND SIDE RESULT - NO OVERLAP with video */
+    .result-panel {
+      flex: 1.2;
+      background: rgba(12, 18, 28, 0.9);
+      backdrop-filter: blur(12px);
+      border-left: 1px solid rgba(0, 255, 255, 0.5);
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+      border-radius: 0 1rem 1rem 0;
+      font-size: 0.85rem;
+      color: #eef4ff;
+      box-shadow: -8px 0 20px rgba(0,0,0,0.5);
+    }
+    .result-panel h2 {
+      font-size: 1.2rem;
+      border-left: 3px solid #2affc0;
+      padding-left: 0.7rem;
+      margin: 0;
+      font-weight: 500;
+      letter-spacing: -0.2px;
+    }
+    .config-card {
+      background: #00000066;
+      border-radius: 12px;
+      padding: 0.7rem;
+    }
+    .config-card h3 {
+      font-size: 0.85rem;
+      color: #8efff0;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .setup-list {
+      padding-left: 1.2rem;
+      font-size: 0.7rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      list-style: decimal;
+      margin-bottom: 0.6rem;
+    }
+    .setup-list li {
+      background: #17212b;
+      margin: 0.2rem 0;
+      padding: 0.2rem 0.6rem;
+      border-radius: 16px;
+      display: inline-block;
+      font-family: monospace;
+    }
+    .hand-slots {
+      display: flex;
+      gap: 1rem;
+      margin: 0.5rem 0;
+    }
+    .hand-slot {
+      background: #0a1420;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      border: 1px solid #2affc0;
+    }
+    .index-result {
+      background: #061016;
+      padding: 0.5rem;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 500;
+      border-left: 4px solid #2affc0;
+      font-family: monospace;
+    }
+    .stats-grid {
+      display: flex;
+      gap: 1rem;
+      justify-content: space-between;
+      background: #010b14;
+      padding: 0.5rem;
+      border-radius: 12px;
+    }
+    .stats-grid div {
+      text-align: center;
+    }
+    .stats-grid dt {
+      font-size: 0.65rem;
+      color: #9cdbff;
+    }
+    .stats-grid dd {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #0ff;
+      line-height: 1;
+    }
+    .finger-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .finger-list li {
+      display: flex;
+      justify-content: space-between;
+      background: #09161f;
+      padding: 0.4rem 0.8rem;
+      border-radius: 30px;
+      align-items: center;
+    }
+    .finger-state {
+      font-weight: bold;
+      background: #1f2a36;
+      padding: 0.2rem 0.7rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+    }
+    .finger-state[data-state="on"] {
+      background: #0f6;
+      color: black;
+      box-shadow: 0 0 4px #0f6;
+    }
+    .hands-list p {
+      font-size: 0.7rem;
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    @media (max-width: 850px) {
+      .main-live-area {
+        flex-direction: column;
+      }
+      .result-panel {
+        border-left: none;
+        border-top: 1px solid #2affc0;
+        max-height: 280px;
+      }
+      .sao-header h1 {
+        font-size: 1.4rem;
+      }
+      .setup-instruction {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="sao-container">
+  <!-- TITLE ON TOP - formal -->
+  <div class="sao-header">
+    <h1>HAND DETECTION INTERFACE | SAO HUD</h1>
+    <p>Professional hand tracking system | Left / Right hand recognition & finger articulation analysis</p>
+  </div>
+
+  <!-- INSTRUCTION (setup) below the title - rectangular, full sentence steps -->
+  <div class="setup-instruction">
+    <div class="setup-text">
+      <div class="setup-label">INITIALIZATION PROTOCOL</div>
+      <div class="setup-steps">
+        <strong>Step 1:</strong> Load MediaPipe hand detection model &nbsp;&nbsp;|&nbsp;&nbsp;
+        <strong>Step 2:</strong> Establish camera connection with user permission &nbsp;&nbsp;|&nbsp;&nbsp;
+        <strong>Step 3:</strong> Detect left and right hand landmarks in real time &nbsp;&nbsp;|&nbsp;&nbsp;
+        <strong>Step 4:</strong> Compute finger angles and extension states
+      </div>
+    </div>
+    <div id="quick-setup-status" style="font-size:0.7rem; color:#33ffcc; font-family:monospace;">status: awaiting initialization</div>
+  </div>
+
+  <!-- BUTTONS below instruction -->
+  <div class="button-bar">
+    <button id="start-button" class="action-btn">INITIALIZE CAMERA</button>
+    <button id="stop-button" class="action-btn" disabled>TERMINATE STREAM</button>
+  </div>
+  <div id="status-message" role="status">System ready. Click "Initialize Camera" to begin hand tracking.</div>
+
+  <!-- MAIN LAYOUT: video frame (max large) + result panel (right side) -->
+  <div class="main-live-area">
+    <!-- VIDEO FRAME as large as possible -->
+    <div class="video-master">
+      <div class="video-frame">
+        <video id="input-video" playsinline style="width:100%; height:100%; object-fit: cover; transform: scaleX(-1);"></video>
+        <canvas id="output-canvas" width="1280" height="720" style="width:100%; height:100%;"></canvas>
+        <div id="empty-state" class="empty-state">Click "Initialize Camera" to start detection</div>
+      </div>
+    </div>
+
+    <!-- RESULT PANEL - right hand side, independent -->
+    <aside class="result-panel">
+      <h2>LIVE DETECTION RESULTS</h2>
+      <div class="config-card">
+        <h3>DETECTION STATUS</h3>
+        <ol class="setup-list">
+          <li>MediaPipe model</li>
+          <li>Camera stream</li>
+          <li>Hand landmarks</li>
+          <li>Finger configuration</li>
+        </ol>
+        <div class="hand-slots">
+          <div class="hand-slot">Left hand: <span id="left-hand-status">waiting</span></div>
+          <div class="hand-slot">Right hand: <span id="right-hand-status">waiting</span></div>
         </div>
-        <p id="status-message" class="status" role="status">
-          Click the initialize button to begin.
-        </p>
-      </section>
+        <p id="detection-box-label" class="box-label" style="font-size:0.7rem;">Detection boxes: waiting</p>
+      </div>
+      <div id="index-result" class="index-result waiting">Index finger state: not detected</div>
+      <dl class="stats-grid">
+        <div><dt>Extended fingers</dt><dd id="finger-count">0</dd></div>
+        <div><dt>Detected hands</dt><dd id="hand-state">0</dd></div>
+      </dl>
+      <ul id="finger-list" class="finger-list">
+        <li data-finger="thumb"><div><strong>Thumb</strong><small class="finger-angle"> Angle: --</small></div><span class="finger-state">off</span></li>
+        <li data-finger="index"><div><strong>Index</strong><small class="finger-angle"> Angle: --</small></div><span class="finger-state">off</span></li>
+        <li data-finger="middle"><div><strong>Middle</strong><small class="finger-angle"> Angle: --</small></div><span class="finger-state">off</span></li>
+        <li data-finger="ring"><div><strong>Ring</strong><small class="finger-angle"> Angle: --</small></div><span class="finger-state">off</span></li>
+        <li data-finger="pinky"><div><strong>Pinky</strong><small class="finger-angle"> Angle: --</small></div><span class="finger-state">off</span></li>
+      </ul>
+      <div id="hands-list" class="hands-list" style="font-size:0.7rem;"><p class="hands-empty">No hand data available.</p></div>
+    </aside>
+  </div>
+</div>
 
-      <section class="recognition-card" aria-label="Finger recognition camera">
-        <div class="video-frame">
-          <video id="input-video" playsinline></video>
-          <canvas id="output-canvas" width="1280" height="720"></canvas>
-          <div id="empty-state" class="empty-state">
-            <span>Click anywhere to initialize the camera</span>
-          </div>
-        </div>
+<!-- Mediapipe scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
-        <aside class="results-panel">
-          <h2>Live detection</h2>
-          <div class="configuration-panel">
-            <h3>Initialization</h3>
-            <ol class="setup-list" aria-label="Initialization steps">
-              <li data-step="mediapipe">Load MediaPipe model</li>
-              <li data-step="camera">Connect camera</li>
-              <li data-step="hand">Find left/right hand landmarks</li>
-              <li data-step="fingers">Configure fingers</li>
-            </ol>
-            <div class="hand-slots" aria-label="Left and right hand initialization">
-              <div class="hand-slot" data-hand-slot="Left">
-                Left hand <span>waiting</span>
-              </div>
-              <div class="hand-slot" data-hand-slot="Right">
-                Right hand <span>waiting</span>
-              </div>
-            </div>
-            <p id="detection-box-label" class="box-label">Detection boxes: waiting</p>
-          </div>
-          <div id="index-result" class="index-result waiting">Index finger not detected</div>
-          <dl class="stats-grid">
-            <div>
-              <dt>Extended fingers</dt>
-              <dd id="finger-count">0</dd>
-            </div>
-            <div>
-              <dt>Detected hands</dt>
-              <dd id="hand-state">0</dd>
-            </div>
-          </dl>
-          <ul id="finger-list" class="finger-list" aria-label="Finger states">
-            <li data-finger="thumb">
-              <div><strong>Thumb</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="index">
-              <div><strong>Index</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="middle">
-              <div><strong>Middle</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="ring">
-              <div><strong>Ring</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="pinky">
-              <div><strong>Pinky</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-          </ul>
-          <div id="hands-list" class="hands-list" aria-live="polite">
-            <p class="hands-empty">No hands configured yet.</p>
-          </div>
-        </aside>
-      </section>
-
-      <section class="notes">
-        <h2>Privacy and setup notes</h2>
-        <ul>
-          <li>Camera frames stay in the browser; no server upload is required.</li>
-          <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
-          <li>Click anywhere on the page to initialize camera detection.</li>
-          <li>Show left hand, right hand, or both hands to draw labeled detection boxes.</li>
-          <li>Press <kbd>Esc</kbd> to stop the camera.</li>
-        </ul>
-      </section>
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script type="module" src="./app.js"></script>
-  </body>
+<script type="module">
+  import { Hands } from 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js';
+  
+  const videoElement = document.getElementById('input-video');
+  const canvasElement = document.getElementById('output-canvas');
+  const canvasCtx = canvasElement.getContext('2d');
+  const startBtn = document.getElementById('start-button');
+  const stopBtn = document.getElementById('stop-button');
+  const statusMsg = document.getElementById('status-message');
+  const emptyStateDiv = document.getElementById('empty-state');
+  
+  // result elements
+  const fingerCountSpan = document.getElementById('finger-count');
+  const handStateSpan = document.getElementById('hand-state');
+  const leftHandSpan = document.getElementById('left-hand-status');
+  const rightHandSpan = document.getElementById('right-hand-status');
+  const indexResultDiv = document.getElementById('index-result');
+  const detectionBoxLabel = document.getElementById('detection-box-label');
+  const quickSetupSpan = document.getElementById('quick-setup-status');
+  
+  const fingerItems = document.querySelectorAll('#finger-list li');
+  const fingerAngleSpans = document.querySelectorAll('.finger-angle');
+  
+  let camera = null;
+  let handsInstance = null;
+  let isStreaming = false;
+  
+  function updateFingerUI(fingerStates, angles) {
+    let extendedCount = 0;
+    const fingers = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+    fingers.forEach((finger, idx) => {
+      const state = fingerStates[finger] || false;
+      if (state) extendedCount++;
+      const li = fingerItems[idx];
+      if (li) {
+        const stateSpan = li.querySelector('.finger-state');
+        if (stateSpan) {
+          stateSpan.innerText = state ? 'ON' : 'off';
+          stateSpan.setAttribute('data-state', state ? 'on' : 'off');
+        }
+      }
+      if (fingerAngleSpans[idx]) {
+        const angle = angles[finger] !== undefined ? angles[finger].toFixed(0) : '--';
+        fingerAngleSpans[idx].innerText = `Angle: ${angle !== '--' ? angle + '°' : '--'}`;
+      }
+    });
+    fingerCountSpan.innerText = extendedCount;
+  }
+  
+  function updateHandStatus(handednessList) {
+    let leftDetected = false, rightDetected = false;
+    handednessList.forEach(h => {
+      if (h === 'Left') leftDetected = true;
+      if (h === 'Right') rightDetected = true;
+    });
+    leftHandSpan.innerText = leftDetected ? 'active' : 'waiting';
+    rightHandSpan.innerText = rightDetected ? 'active' : 'waiting';
+    handStateSpan.innerText = handednessList.length;
+    detectionBoxLabel.innerText = `Detection boxes: ${handednessList.length} hand(s) tracked`;
+    const handsListDiv = document.getElementById('hands-list');
+    if (handednessList.length === 0) {
+      handsListDiv.innerHTML = '<p class="hands-empty">No hand data available.</p>';
+    } else {
+      handsListDiv.innerHTML = `<p>Hands detected: ${handednessList.join(', ')}</p>`;
+    }
+  }
+  
+  function updateIndexResult(isExtended, angle) {
+    if (isExtended) {
+      indexResultDiv.innerHTML = `Index finger extended | angle: ${angle !== undefined ? angle.toFixed(0) + '°' : '--'}`;
+      indexResultDiv.style.background = "#0f3b2c";
+    } else {
+      indexResultDiv.innerHTML = `Index finger state: flexed / not detected`;
+      indexResultDiv.style.background = "#061016";
+    }
+  }
+  
+  function onHandResults(results) {
+    if (!results || !results.multiHandLandmarks || !results.multiHandedness) {
+      if (!isStreaming) return;
+      updateHandStatus([]);
+      updateFingerUI({}, {});
+      updateIndexResult(false, null);
+      return;
+    }
+    if (canvasElement.width !== videoElement.videoWidth || canvasElement.height !== videoElement.videoHeight) {
+      if (videoElement.videoWidth && videoElement.videoHeight) {
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+      }
+    }
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.scale(-1, 1);
+    canvasCtx.translate(-canvasElement.width, 0);
+    
+    const handednessList = [];
+    const allFingerStates = [];
+    const allAngles = [];
+    
+    for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+      const landmarks = results.multiHandLandmarks[i];
+      const handedness = results.multiHandedness[i].label;
+      handednessList.push(handedness);
+      
+      const connections = Hands.HAND_CONNECTIONS;
+      for (let conn of connections) {
+        const start = landmarks[conn[0]];
+        const end = landmarks[conn[1]];
+        if (start && end) {
+          canvasCtx.beginPath();
+          canvasCtx.moveTo(start.x * canvasElement.width, start.y * canvasElement.height);
+          canvasCtx.lineTo(end.x * canvasElement.width, end.y * canvasElement.height);
+          canvasCtx.strokeStyle = '#0ff9ff';
+          canvasCtx.lineWidth = 2;
+          canvasCtx.stroke();
+        }
+      }
+      for (let lm of landmarks) {
+        canvasCtx.beginPath();
+        canvasCtx.arc(lm.x * canvasElement.width, lm.y * canvasElement.height, 5, 0, 2 * Math.PI);
+        canvasCtx.fillStyle = handedness === 'Left' ? '#ff44aa' : '#33ffcc';
+        canvasCtx.fill();
+      }
+      
+      const fingerTips = [4, 8, 12, 16, 20];
+      const fingerMCP = [1, 5, 9, 13, 17];
+      const fingerNames = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+      const states = {};
+      const angles = {};
+      for (let f = 0; f < fingerTips.length; f++) {
+        const tip = landmarks[fingerTips[f]];
+        const pip = landmarks[fingerTips[f] - 1];
+        const mcp = landmarks[fingerMCP[f]];
+        if (tip && pip && mcp) {
+          const angleRad = Math.atan2(tip.y - pip.y, tip.x - pip.x) - Math.atan2(mcp.y - pip.y, mcp.x - pip.x);
+          let angleDeg = Math.abs(angleRad * 180 / Math.PI);
+          if (angleDeg > 150) angleDeg = 180 - (angleDeg - 150);
+          let isExtended = false;
+          if (f === 0) {
+            const wrist = landmarks[0];
+            const thumbTip = tip;
+            const thumbIP = landmarks[3];
+            const distToWrist = Math.hypot(thumbTip.x - wrist.x, thumbTip.y - wrist.y);
+            const distIP = Math.hypot(thumbIP.x - wrist.x, thumbIP.y - wrist.y);
+            isExtended = distToWrist > distIP + 0.02;
+          } else {
+            isExtended = (tip.y < pip.y && pip.y < mcp.y);
+          }
+          states[fingerNames[f]] = isExtended;
+          angles[fingerNames[f]] = angleDeg;
+        } else {
+          states[fingerNames[f]] = false;
+          angles[fingerNames[f]] = 0;
+        }
+      }
+      allFingerStates.push(states);
+      allAngles.push(angles);
+      
+      canvasCtx.font = "bold 18px monospace";
+      canvasCtx.fillStyle = "#ffffff";
+      const wrist = landmarks[0];
+      canvasCtx.fillText(handedness, wrist.x * canvasElement.width - 20, wrist.y * canvasElement.height - 20);
+    }
+    
+    if (allFingerStates.length > 0) {
+      const mergedStates = allFingerStates[0];
+      const mergedAngles = allAngles[0];
+      if (allFingerStates.length > 1) {
+        for (let f of ['thumb','index','middle','ring','pinky']) {
+          mergedStates[f] = mergedStates[f] || allFingerStates[1][f];
+          if (allAngles[1][f]) mergedAngles[f] = (mergedAngles[f] + allAngles[1][f])/2;
+        }
+      }
+      updateFingerUI(mergedStates, mergedAngles);
+      const indexExtended = mergedStates['index'] || false;
+      updateIndexResult(indexExtended, mergedAngles['index']);
+    } else {
+      updateFingerUI({}, {});
+      updateIndexResult(false, null);
+    }
+    updateHandStatus(handednessList);
+    canvasCtx.restore();
+  }
+  
+  async function initMediaPipe() {
+    quickSetupSpan.innerText = 'status: loading model...';
+    statusMsg.innerText = 'Loading hand detection model...';
+    handsInstance = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    handsInstance.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    handsInstance.onResults(onHandResults);
+    quickSetupSpan.innerText = 'status: model ready - requesting camera';
+    statusMsg.innerText = 'Requesting camera access...';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoElement.srcObject = stream;
+      await videoElement.play();
+      camera = new Camera(videoElement, {
+        onFrame: async () => {
+          if (handsInstance) await handsInstance.send({ image: videoElement });
+        },
+        width: 1280,
+        height: 720
+      });
+      await camera.start();
+      isStreaming = true;
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      emptyStateDiv.style.display = 'none';
+      statusMsg.innerText = 'Camera active - hand tracking operational';
+      quickSetupSpan.innerText = 'status: fully active | tracking hands';
+      setTimeout(() => {
+        if (handsInstance && videoElement) handsInstance.send({ image: videoElement });
+      }, 100);
+    } catch (err) {
+      statusMsg.innerText = 'Camera error: ' + err.message;
+      quickSetupSpan.innerText = 'status: camera access failed';
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    }
+  }
+  
+  function stopCameraPipeline() {
+    if (camera) {
+      camera.stop();
+      camera = null;
+    }
+    if (videoElement.srcObject) {
+      const tracks = videoElement.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoElement.srcObject = null;
+    }
+    isStreaming = false;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    emptyStateDiv.style.display = 'flex';
+    statusMsg.innerText = 'Camera stream terminated. Click "Initialize Camera" to restart.';
+    quickSetupSpan.innerText = 'status: idle - ready for initialization';
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    updateHandStatus([]);
+    updateFingerUI({}, {});
+    updateIndexResult(false, null);
+    leftHandSpan.innerText = 'waiting';
+    rightHandSpan.innerText = 'waiting';
+    handStateSpan.innerText = '0';
+    fingerCountSpan.innerText = '0';
+    detectionBoxLabel.innerText = 'Detection boxes: waiting';
+    const handsDiv = document.getElementById('hands-list');
+    handsDiv.innerHTML = '<p class="hands-empty">No hand data available.</p>';
+  }
+  
+  startBtn.onclick = () => {
+    if (isStreaming) return;
+    initMediaPipe().catch(e => {
+      statusMsg.innerText = 'Initialization failed: ' + e.message;
+      startBtn.disabled = false;
+    });
+  };
+  stopBtn.onclick = () => {
+    stopCameraPipeline();
+  };
+  
+  function resizeCanvas() {
+    if (videoElement.videoWidth && videoElement.videoHeight) {
+      canvasElement.width = videoElement.videoWidth;
+      canvasElement.height = videoElement.videoHeight;
+    }
+  }
+  window.addEventListener('resize', () => resizeCanvas());
+  videoElement.addEventListener('loadedmetadata', () => resizeCanvas());
+  
+  emptyStateDiv.style.display = 'flex';
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isStreaming) {
+      stopCameraPipeline();
+      statusMsg.innerText = 'Escape key pressed. Camera stream terminated.';
+    }
+  });
+</script>
+</body>
 </html>
