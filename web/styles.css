@@ -88,22 +88,21 @@ kbd {
 }
 
 .app-shell {
-  width: min(1180px, calc(100% - 1.5rem));
+  width: min(1560px, calc(100% - 1.5rem));
   min-height: 100vh;
   margin: 0 auto;
-  padding: clamp(0.75rem, 2vh, 1.35rem) 0 1.25rem;
+  padding: clamp(0.6rem, 1.5vh, 1rem) 0 1rem;
 }
 
-.game-header {
+.top-hud {
   display: grid;
-  grid-template-columns: minmax(260px, 0.78fr) minmax(340px, 1.22fr);
-  gap: 0.85rem;
-  align-items: stretch;
+  gap: 0.65rem;
   margin-bottom: 0.85rem;
 }
 
 .hero,
 .configuration-panel,
+.controls-panel,
 .video-frame,
 .results-panel,
 .notes {
@@ -120,6 +119,7 @@ kbd {
 
 .hero::before,
 .configuration-panel::before,
+.controls-panel::before,
 .video-frame::before,
 .results-panel::before,
 .notes::before {
@@ -132,7 +132,8 @@ kbd {
 }
 
 .hero {
-  padding: 1rem;
+  padding: 0.85rem 1rem;
+  text-align: center;
 }
 
 .eyebrow {
@@ -153,7 +154,7 @@ p {
 }
 
 h1 {
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.35rem;
   color: #ffffff;
   font-size: clamp(1.65rem, 4vw, 3.35rem);
   line-height: 0.96;
@@ -171,8 +172,8 @@ h2 {
 }
 
 .hero-copy {
-  max-width: 680px;
-  margin-bottom: 0.8rem;
+  max-width: 860px;
+  margin: 0 auto;
   color: var(--muted);
   font-size: 0.95rem;
   line-height: 1.45;
@@ -181,8 +182,9 @@ h2 {
 .actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.55rem;
-  margin: 0.85rem 0 0.65rem;
+  margin: 0 0 0.55rem;
 }
 
 #stop-button {
@@ -207,7 +209,7 @@ h2 {
 }
 
 .configuration-panel {
-  padding: 1rem;
+  padding: 0.85rem 1rem;
 }
 
 .panel-title-row {
@@ -233,7 +235,7 @@ h2 {
 
 .setup-list li {
   position: relative;
-  min-height: 4.2rem;
+  min-height: 3.55rem;
   border: 1px solid rgba(68, 244, 255, 0.22);
   border-radius: 0.65rem;
   padding: 1.5rem 0.65rem 0.65rem;
@@ -317,16 +319,27 @@ h2 {
   font-size: 0.78rem;
 }
 
-.camera-stage {
+.controls-panel {
+  padding: 0.8rem 1rem;
+  text-align: center;
+}
+
+.scan-layout {
   display: grid;
-  place-items: center;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 390px);
+  gap: 0.85rem;
+  align-items: stretch;
   margin-bottom: 0.85rem;
 }
 
+.camera-stage {
+  min-width: 0;
+}
+
 .video-frame {
-  width: min(100%, 1120px, max(340px, calc((100vh - 25rem) * 16 / 9)));
-  min-width: min(100%, 340px);
-  max-height: min(58vh, 620px);
+  width: 100%;
+  height: min(68vh, calc((100vw - 29rem) * 9 / 16));
+  min-height: 360px;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background:
@@ -377,13 +390,13 @@ h2 {
 
 .results-panel {
   padding: 1rem;
+  max-height: min(68vh, calc((100vw - 29rem) * 9 / 16));
+  min-height: 360px;
+  overflow: auto;
 }
 
 .results-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: 0.75rem;
   margin-bottom: 0.8rem;
 }
@@ -441,7 +454,7 @@ h2 {
 
 .finger-list {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.55rem;
   padding: 0;
   margin: 0 0 0.85rem;
@@ -450,10 +463,11 @@ h2 {
 
 .finger-list li {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 0.4rem;
   justify-content: space-between;
-  min-height: 5rem;
+  min-height: auto;
   border: 1px solid rgba(68, 244, 255, 0.16);
   border-radius: 0.75rem;
   padding: 0.75rem;
@@ -488,7 +502,7 @@ h2 {
 
 .hands-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.75rem;
 }
 
@@ -556,20 +570,26 @@ h2 {
   margin-bottom: 0;
 }
 
-@media (max-height: 760px) and (min-width: 861px) {
+@media (max-height: 760px) and (min-width: 981px) {
   .hero-copy,
   .notes {
     display: none;
   }
 
   .video-frame {
-    width: min(100%, 960px, max(340px, calc((100vh - 17.5rem) * 16 / 9)));
-    max-height: 54vh;
+    height: min(64vh, calc((100vw - 29rem) * 9 / 16));
+    min-height: 300px;
+  }
+
+  .results-panel {
+    max-height: min(64vh, calc((100vw - 29rem) * 9 / 16));
+    min-height: 300px;
   }
 }
 
-@media (max-width: 920px) {
-  .game-header {
+@media (max-width: 980px) {
+  .top-hud,
+  .scan-layout {
     grid-template-columns: 1fr;
   }
 
@@ -580,8 +600,14 @@ h2 {
   }
 
   .video-frame {
-    width: min(100%, max(340px, calc((100vh - 28rem) * 16 / 9)));
-    max-height: 46vh;
+    height: auto;
+    min-height: auto;
+    max-height: none;
+  }
+
+  .results-panel {
+    max-height: none;
+    min-height: auto;
   }
 }
 

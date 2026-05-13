@@ -19,11 +19,12 @@ python3 -m http.server 6463
 
 Open <http://localhost:6463>, press **Initialize scanner** to turn on the
 camera, and show your left hand, right hand, or both hands. The page displays
-game-style initialization steps across the top, a viewport-sized camera frame,
-then live detection results below the video. It also shows left/right hand
-status, per-hand finger configuration, and a separate labeled detection box
-around each hand captured by the camera. Press **Stop scanner** or `Esc` to
-release the webcam.
+the title at the top, setup instructions below it, scanner buttons below the
+instructions, then a large viewport-sized camera frame with live detection
+results in a separate right-side panel. It also shows left/right hand status,
+per-hand finger configuration, and a separate labeled detection box around each
+hand captured by the camera. Press **Stop scanner** or `Esc` to release the
+webcam.
 
 ## Python desktop demo setup
 
