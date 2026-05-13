@@ -8,22 +8,15 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="game-header" aria-label="Game HUD">
-        <div class="hero">
+      <section class="top-hud" aria-label="Scanner setup">
+        <header class="hero">
           <p class="eyebrow">SAO hand recognition</p>
           <h1>Hand Scanner Arena</h1>
           <p class="hero-copy">
-            Press Initialize scanner to turn on the camera, allow access, then
-            show your left hand, right hand, or both hands.
+            Detect and configure left hand, right hand, or both hands in a live
+            camera scanner.
           </p>
-          <div class="actions">
-            <button id="start-button" type="button">Initialize scanner</button>
-            <button id="stop-button" type="button" disabled>Stop scanner</button>
-          </div>
-          <p id="status-message" class="status" role="status">
-            Press Initialize scanner to begin.
-          </p>
-        </div>
+        </header>
 
         <div class="configuration-panel">
           <div class="panel-title-row">
@@ -46,19 +39,30 @@
           </div>
           <p id="detection-box-label" class="box-label">Detection boxes: waiting</p>
         </div>
-      </section>
 
-      <section class="camera-stage" aria-label="Finger recognition camera">
-        <div class="video-frame">
-          <video id="input-video" playsinline></video>
-          <canvas id="output-canvas" width="1280" height="720"></canvas>
-          <div id="empty-state" class="empty-state">
-            <span>Press Initialize scanner to turn on the camera</span>
+        <div class="controls-panel">
+          <div class="actions">
+            <button id="start-button" type="button">Initialize scanner</button>
+            <button id="stop-button" type="button" disabled>Stop scanner</button>
           </div>
+          <p id="status-message" class="status" role="status">
+            Press Initialize scanner to begin.
+          </p>
         </div>
       </section>
 
-      <section class="results-panel" aria-label="Detection results">
+      <section class="scan-layout" aria-label="Finger recognition camera and results">
+        <div class="camera-stage">
+          <div class="video-frame">
+            <video id="input-video" playsinline></video>
+            <canvas id="output-canvas" width="1280" height="720"></canvas>
+            <div id="empty-state" class="empty-state">
+              <span>Press Initialize scanner to turn on the camera</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="results-panel" aria-label="Detection results">
         <div class="results-header">
           <div>
             <p class="eyebrow">Battle telemetry</p>
@@ -101,6 +105,7 @@
         <div id="hands-list" class="hands-list" aria-live="polite">
           <p class="hands-empty">No hands configured yet.</p>
         </div>
+        </aside>
       </section>
 
       <section class="notes">
