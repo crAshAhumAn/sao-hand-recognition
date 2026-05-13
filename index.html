@@ -8,25 +8,47 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="hero">
-        <p class="eyebrow">Hand recognition starter</p>
-        <h1>Click to initialize hand detection</h1>
-        <p class="hero-copy">
-          Click anywhere on the page to start initialization, allow camera access,
-          and show your left hand, right hand, or both hands. The app configures
-          the hand landmarks on screen, draws detection boxes, and labels each
-          hand as left or right.
-        </p>
-        <div class="actions">
-          <button id="start-button" type="button">Initialize camera</button>
-          <button id="stop-button" type="button" disabled>Stop camera</button>
+      <section class="game-header" aria-label="Game HUD">
+        <div class="hero">
+          <p class="eyebrow">SAO hand recognition</p>
+          <h1>Hand Scanner Arena</h1>
+          <p class="hero-copy">
+            Click anywhere to initialize the scanner, allow camera access, then
+            show your left hand, right hand, or both hands.
+          </p>
+          <div class="actions">
+            <button id="start-button" type="button">Initialize scanner</button>
+            <button id="stop-button" type="button" disabled>Stop scanner</button>
+          </div>
+          <p id="status-message" class="status" role="status">
+            Click the page or initialize scanner to begin.
+          </p>
         </div>
-        <p id="status-message" class="status" role="status">
-          Click the page or the initialize button to begin.
-        </p>
+
+        <div class="configuration-panel">
+          <div class="panel-title-row">
+            <p class="eyebrow">Initialization procedure</p>
+            <h2>Mission checklist</h2>
+          </div>
+          <ol class="setup-list" aria-label="Initialization steps">
+            <li data-step="mediapipe">Load model</li>
+            <li data-step="camera">Connect camera</li>
+            <li data-step="hand">Lock left/right hands</li>
+            <li data-step="fingers">Configure fingers</li>
+          </ol>
+          <div class="hand-slots" aria-label="Left and right hand initialization">
+            <div class="hand-slot" data-hand-slot="Left">
+              Left hand <span>waiting</span>
+            </div>
+            <div class="hand-slot" data-hand-slot="Right">
+              Right hand <span>waiting</span>
+            </div>
+          </div>
+          <p id="detection-box-label" class="box-label">Detection boxes: waiting</p>
+        </div>
       </section>
 
-      <section class="recognition-card" aria-label="Finger recognition camera">
+      <section class="camera-stage" aria-label="Finger recognition camera">
         <div class="video-frame">
           <video id="input-video" playsinline></video>
           <canvas id="output-canvas" width="1280" height="720"></canvas>
@@ -34,28 +56,16 @@
             <span>Click anywhere to initialize the camera</span>
           </div>
         </div>
+      </section>
 
-        <aside class="results-panel">
-          <h2>Live detection</h2>
-          <div class="configuration-panel">
-            <h3>Initialization</h3>
-            <ol class="setup-list" aria-label="Initialization steps">
-              <li data-step="mediapipe">Load MediaPipe model</li>
-              <li data-step="camera">Connect camera</li>
-              <li data-step="hand">Find left/right hand landmarks</li>
-              <li data-step="fingers">Configure fingers</li>
-            </ol>
-            <div class="hand-slots" aria-label="Left and right hand initialization">
-              <div class="hand-slot" data-hand-slot="Left">
-                Left hand <span>waiting</span>
-              </div>
-              <div class="hand-slot" data-hand-slot="Right">
-                Right hand <span>waiting</span>
-              </div>
+      <section class="results-panel" aria-label="Detection results">
+          <div class="results-header">
+            <div>
+              <p class="eyebrow">Battle telemetry</p>
+              <h2>Detection result</h2>
             </div>
-            <p id="detection-box-label" class="box-label">Detection boxes: waiting</p>
+            <div id="index-result" class="index-result waiting">Index finger not detected</div>
           </div>
-          <div id="index-result" class="index-result waiting">Index finger not detected</div>
           <dl class="stats-grid">
             <div>
               <dt>Extended fingers</dt>
@@ -91,7 +101,6 @@
           <div id="hands-list" class="hands-list" aria-live="polite">
             <p class="hands-empty">No hands configured yet.</p>
           </div>
-        </aside>
       </section>
 
       <section class="notes">
