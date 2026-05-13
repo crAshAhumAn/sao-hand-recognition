@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -13,7 +13,7 @@
           <p class="eyebrow">SAO hand recognition</p>
           <h1>Hand Scanner Arena</h1>
           <p class="hero-copy">
-            Click anywhere to initialize the scanner, allow camera access, then
+            Press Initialize scanner to turn on the camera, allow access, then
             show your left hand, right hand, or both hands.
           </p>
           <div class="actions">
@@ -21,7 +21,7 @@
             <button id="stop-button" type="button" disabled>Stop scanner</button>
           </div>
           <p id="status-message" class="status" role="status">
-            Click the page or initialize scanner to begin.
+            Press Initialize scanner to begin.
           </p>
         </div>
 
@@ -53,347 +53,71 @@
           <video id="input-video" playsinline></video>
           <canvas id="output-canvas" width="1280" height="720"></canvas>
           <div id="empty-state" class="empty-state">
-            <span>Click anywhere to initialize the camera</span>
+            <span>Press Initialize scanner to turn on the camera</span>
           </div>
         </div>
       </section>
 
       <section class="results-panel" aria-label="Detection results">
-          <div class="results-header">
-            <div>
-              <p class="eyebrow">Battle telemetry</p>
-              <h2>Detection result</h2>
-            </div>
-            <div id="index-result" class="index-result waiting">Index finger not detected</div>
+        <div class="results-header">
+          <div>
+            <p class="eyebrow">Battle telemetry</p>
+            <h2>Detection result</h2>
           </div>
-          <dl class="stats-grid">
-            <div>
-              <dt>Extended fingers</dt>
-              <dd id="finger-count">0</dd>
-            </div>
-            <div>
-              <dt>Detected hands</dt>
-              <dd id="hand-state">0</dd>
-            </div>
-          </dl>
-          <ul id="finger-list" class="finger-list" aria-label="Finger states">
-            <li data-finger="thumb">
-              <div><strong>Thumb</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="index">
-              <div><strong>Index</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="middle">
-              <div><strong>Middle</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="ring">
-              <div><strong>Ring</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="pinky">
-              <div><strong>Pinky</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-          </ul>
-          <div id="hands-list" class="hands-list" aria-live="polite">
-            <p class="hands-empty">No hands configured yet.</p>
+          <div id="index-result" class="index-result waiting">Index finger not detected</div>
+        </div>
+        <dl class="stats-grid">
+          <div>
+            <dt>Extended fingers</dt>
+            <dd id="finger-count">0</dd>
           </div>
+          <div>
+            <dt>Detected hands</dt>
+            <dd id="hand-state">0</dd>
+          </div>
+        </dl>
+        <ul id="finger-list" class="finger-list" aria-label="Finger states">
+          <li data-finger="thumb">
+            <div><strong>Thumb</strong><small class="finger-angle">Angle: --</small></div>
+            <span class="finger-state">off</span>
+          </li>
+          <li data-finger="index">
+            <div><strong>Index</strong><small class="finger-angle">Angle: --</small></div>
+            <span class="finger-state">off</span>
+          </li>
+          <li data-finger="middle">
+            <div><strong>Middle</strong><small class="finger-angle">Angle: --</small></div>
+            <span class="finger-state">off</span>
+          </li>
+          <li data-finger="ring">
+            <div><strong>Ring</strong><small class="finger-angle">Angle: --</small></div>
+            <span class="finger-state">off</span>
+          </li>
+          <li data-finger="pinky">
+            <div><strong>Pinky</strong><small class="finger-angle">Angle: --</small></div>
+            <span class="finger-state">off</span>
+          </li>
+        </ul>
+        <div id="hands-list" class="hands-list" aria-live="polite">
+          <p class="hands-empty">No hands configured yet.</p>
+        </div>
       </section>
 
-<!-- Mediapipe scripts -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+      <section class="notes">
+        <h2>Privacy and setup notes</h2>
+        <ul>
+          <li>Camera frames stay in the browser; no server upload is required.</li>
+          <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
+          <li>Press <strong>Initialize scanner</strong> to turn on camera detection.</li>
+          <li>Show left hand, right hand, or both hands to draw labeled detection boxes.</li>
+          <li>Press <kbd>Esc</kbd> to stop the camera.</li>
+        </ul>
+      </section>
+    </main>
 
-<script type="module">
-  import { Hands } from 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js';
-  
-  const videoElement = document.getElementById('input-video');
-  const canvasElement = document.getElementById('output-canvas');
-  const canvasCtx = canvasElement.getContext('2d');
-  const startBtn = document.getElementById('start-button');
-  const stopBtn = document.getElementById('stop-button');
-  const statusMsg = document.getElementById('status-message');
-  const emptyStateDiv = document.getElementById('empty-state');
-  
-  // result elements
-  const fingerCountSpan = document.getElementById('finger-count');
-  const handStateSpan = document.getElementById('hand-state');
-  const leftHandSpan = document.getElementById('left-hand-status');
-  const rightHandSpan = document.getElementById('right-hand-status');
-  const indexResultDiv = document.getElementById('index-result');
-  const detectionBoxLabel = document.getElementById('detection-box-label');
-  const quickSetupSpan = document.getElementById('quick-setup-status');
-  
-  const fingerItems = document.querySelectorAll('#finger-list li');
-  const fingerAngleSpans = document.querySelectorAll('.finger-angle');
-  
-  let camera = null;
-  let handsInstance = null;
-  let isStreaming = false;
-  
-  function updateFingerUI(fingerStates, angles) {
-    let extendedCount = 0;
-    const fingers = ['thumb', 'index', 'middle', 'ring', 'pinky'];
-    fingers.forEach((finger, idx) => {
-      const state = fingerStates[finger] || false;
-      if (state) extendedCount++;
-      const li = fingerItems[idx];
-      if (li) {
-        const stateSpan = li.querySelector('.finger-state');
-        if (stateSpan) {
-          stateSpan.innerText = state ? 'ON' : 'off';
-          stateSpan.setAttribute('data-state', state ? 'on' : 'off');
-        }
-      }
-      if (fingerAngleSpans[idx]) {
-        const angle = angles[finger] !== undefined ? angles[finger].toFixed(0) : '--';
-        fingerAngleSpans[idx].innerText = `Angle: ${angle !== '--' ? angle + '°' : '--'}`;
-      }
-    });
-    fingerCountSpan.innerText = extendedCount;
-  }
-  
-  function updateHandStatus(handednessList) {
-    let leftDetected = false, rightDetected = false;
-    handednessList.forEach(h => {
-      if (h === 'Left') leftDetected = true;
-      if (h === 'Right') rightDetected = true;
-    });
-    leftHandSpan.innerText = leftDetected ? 'active' : 'waiting';
-    rightHandSpan.innerText = rightDetected ? 'active' : 'waiting';
-    handStateSpan.innerText = handednessList.length;
-    detectionBoxLabel.innerText = `Detection boxes: ${handednessList.length} hand(s) tracked`;
-    const handsListDiv = document.getElementById('hands-list');
-    if (handednessList.length === 0) {
-      handsListDiv.innerHTML = '<p class="hands-empty">No hand data available.</p>';
-    } else {
-      handsListDiv.innerHTML = `<p>Hands detected: ${handednessList.join(', ')}</p>`;
-    }
-  }
-  
-  function updateIndexResult(isExtended, angle) {
-    if (isExtended) {
-      indexResultDiv.innerHTML = `Index finger extended | angle: ${angle !== undefined ? angle.toFixed(0) + '°' : '--'}`;
-      indexResultDiv.style.background = "#0f3b2c";
-    } else {
-      indexResultDiv.innerHTML = `Index finger state: flexed / not detected`;
-      indexResultDiv.style.background = "#061016";
-    }
-  }
-  
-  function onHandResults(results) {
-    if (!results || !results.multiHandLandmarks || !results.multiHandedness) {
-      if (!isStreaming) return;
-      updateHandStatus([]);
-      updateFingerUI({}, {});
-      updateIndexResult(false, null);
-      return;
-    }
-    if (canvasElement.width !== videoElement.videoWidth || canvasElement.height !== videoElement.videoHeight) {
-      if (videoElement.videoWidth && videoElement.videoHeight) {
-        canvasElement.width = videoElement.videoWidth;
-        canvasElement.height = videoElement.videoHeight;
-      }
-    }
-    canvasCtx.save();
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    canvasCtx.scale(-1, 1);
-    canvasCtx.translate(-canvasElement.width, 0);
-    
-    const handednessList = [];
-    const allFingerStates = [];
-    const allAngles = [];
-    
-    for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-      const landmarks = results.multiHandLandmarks[i];
-      const handedness = results.multiHandedness[i].label;
-      handednessList.push(handedness);
-      
-      const connections = Hands.HAND_CONNECTIONS;
-      for (let conn of connections) {
-        const start = landmarks[conn[0]];
-        const end = landmarks[conn[1]];
-        if (start && end) {
-          canvasCtx.beginPath();
-          canvasCtx.moveTo(start.x * canvasElement.width, start.y * canvasElement.height);
-          canvasCtx.lineTo(end.x * canvasElement.width, end.y * canvasElement.height);
-          canvasCtx.strokeStyle = '#0ff9ff';
-          canvasCtx.lineWidth = 2;
-          canvasCtx.stroke();
-        }
-      }
-      for (let lm of landmarks) {
-        canvasCtx.beginPath();
-        canvasCtx.arc(lm.x * canvasElement.width, lm.y * canvasElement.height, 5, 0, 2 * Math.PI);
-        canvasCtx.fillStyle = handedness === 'Left' ? '#ff44aa' : '#33ffcc';
-        canvasCtx.fill();
-      }
-      
-      const fingerTips = [4, 8, 12, 16, 20];
-      const fingerMCP = [1, 5, 9, 13, 17];
-      const fingerNames = ['thumb', 'index', 'middle', 'ring', 'pinky'];
-      const states = {};
-      const angles = {};
-      for (let f = 0; f < fingerTips.length; f++) {
-        const tip = landmarks[fingerTips[f]];
-        const pip = landmarks[fingerTips[f] - 1];
-        const mcp = landmarks[fingerMCP[f]];
-        if (tip && pip && mcp) {
-          const angleRad = Math.atan2(tip.y - pip.y, tip.x - pip.x) - Math.atan2(mcp.y - pip.y, mcp.x - pip.x);
-          let angleDeg = Math.abs(angleRad * 180 / Math.PI);
-          if (angleDeg > 150) angleDeg = 180 - (angleDeg - 150);
-          let isExtended = false;
-          if (f === 0) {
-            const wrist = landmarks[0];
-            const thumbTip = tip;
-            const thumbIP = landmarks[3];
-            const distToWrist = Math.hypot(thumbTip.x - wrist.x, thumbTip.y - wrist.y);
-            const distIP = Math.hypot(thumbIP.x - wrist.x, thumbIP.y - wrist.y);
-            isExtended = distToWrist > distIP + 0.02;
-          } else {
-            isExtended = (tip.y < pip.y && pip.y < mcp.y);
-          }
-          states[fingerNames[f]] = isExtended;
-          angles[fingerNames[f]] = angleDeg;
-        } else {
-          states[fingerNames[f]] = false;
-          angles[fingerNames[f]] = 0;
-        }
-      }
-      allFingerStates.push(states);
-      allAngles.push(angles);
-      
-      canvasCtx.font = "bold 18px monospace";
-      canvasCtx.fillStyle = "#ffffff";
-      const wrist = landmarks[0];
-      canvasCtx.fillText(handedness, wrist.x * canvasElement.width - 20, wrist.y * canvasElement.height - 20);
-    }
-    
-    if (allFingerStates.length > 0) {
-      const mergedStates = allFingerStates[0];
-      const mergedAngles = allAngles[0];
-      if (allFingerStates.length > 1) {
-        for (let f of ['thumb','index','middle','ring','pinky']) {
-          mergedStates[f] = mergedStates[f] || allFingerStates[1][f];
-          if (allAngles[1][f]) mergedAngles[f] = (mergedAngles[f] + allAngles[1][f])/2;
-        }
-      }
-      updateFingerUI(mergedStates, mergedAngles);
-      const indexExtended = mergedStates['index'] || false;
-      updateIndexResult(indexExtended, mergedAngles['index']);
-    } else {
-      updateFingerUI({}, {});
-      updateIndexResult(false, null);
-    }
-    updateHandStatus(handednessList);
-    canvasCtx.restore();
-  }
-  
-  async function initMediaPipe() {
-    quickSetupSpan.innerText = 'status: loading model...';
-    statusMsg.innerText = 'Loading hand detection model...';
-    handsInstance = new Hands({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-    handsInstance.setOptions({
-      maxNumHands: 2,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
-    handsInstance.onResults(onHandResults);
-    quickSetupSpan.innerText = 'status: model ready - requesting camera';
-    statusMsg.innerText = 'Requesting camera access...';
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoElement.srcObject = stream;
-      await videoElement.play();
-      camera = new Camera(videoElement, {
-        onFrame: async () => {
-          if (handsInstance) await handsInstance.send({ image: videoElement });
-        },
-        width: 1280,
-        height: 720
-      });
-      await camera.start();
-      isStreaming = true;
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-      emptyStateDiv.style.display = 'none';
-      statusMsg.innerText = 'Camera active - hand tracking operational';
-      quickSetupSpan.innerText = 'status: fully active | tracking hands';
-      setTimeout(() => {
-        if (handsInstance && videoElement) handsInstance.send({ image: videoElement });
-      }, 100);
-    } catch (err) {
-      statusMsg.innerText = 'Camera error: ' + err.message;
-      quickSetupSpan.innerText = 'status: camera access failed';
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-    }
-  }
-  
-  function stopCameraPipeline() {
-    if (camera) {
-      camera.stop();
-      camera = null;
-    }
-    if (videoElement.srcObject) {
-      const tracks = videoElement.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      videoElement.srcObject = null;
-    }
-    isStreaming = false;
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    emptyStateDiv.style.display = 'flex';
-    statusMsg.innerText = 'Camera stream terminated. Click "Initialize Camera" to restart.';
-    quickSetupSpan.innerText = 'status: idle - ready for initialization';
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    updateHandStatus([]);
-    updateFingerUI({}, {});
-    updateIndexResult(false, null);
-    leftHandSpan.innerText = 'waiting';
-    rightHandSpan.innerText = 'waiting';
-    handStateSpan.innerText = '0';
-    fingerCountSpan.innerText = '0';
-    detectionBoxLabel.innerText = 'Detection boxes: waiting';
-    const handsDiv = document.getElementById('hands-list');
-    handsDiv.innerHTML = '<p class="hands-empty">No hand data available.</p>';
-  }
-  
-  startBtn.onclick = () => {
-    if (isStreaming) return;
-    initMediaPipe().catch(e => {
-      statusMsg.innerText = 'Initialization failed: ' + e.message;
-      startBtn.disabled = false;
-    });
-  };
-  stopBtn.onclick = () => {
-    stopCameraPipeline();
-  };
-  
-  function resizeCanvas() {
-    if (videoElement.videoWidth && videoElement.videoHeight) {
-      canvasElement.width = videoElement.videoWidth;
-      canvasElement.height = videoElement.videoHeight;
-    }
-  }
-  window.addEventListener('resize', () => resizeCanvas());
-  videoElement.addEventListener('loadedmetadata', () => resizeCanvas());
-  
-  emptyStateDiv.style.display = 'flex';
-  
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isStreaming) {
-      stopCameraPipeline();
-      statusMsg.innerText = 'Escape key pressed. Camera stream terminated.';
-    }
-  });
-</script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
 </html>

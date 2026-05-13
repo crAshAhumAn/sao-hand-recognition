@@ -17,7 +17,7 @@ serve it from `localhost` or HTTPS:
 python3 -m http.server 6463
 ```
 
-Open <http://localhost:6463>, click anywhere on the page to initialize the
+Open <http://localhost:6463>, press **Initialize scanner** to turn on the
 camera, and show your left hand, right hand, or both hands. The page displays
 game-style initialization steps across the top, a viewport-sized camera frame,
 then live detection results below the video. It also shows left/right hand

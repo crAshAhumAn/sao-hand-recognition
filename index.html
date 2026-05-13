@@ -13,7 +13,7 @@
           <p class="eyebrow">SAO hand recognition</p>
           <h1>Hand Scanner Arena</h1>
           <p class="hero-copy">
-            Click anywhere to initialize the scanner, allow camera access, then
+            Press Initialize scanner to turn on the camera, allow access, then
             show your left hand, right hand, or both hands.
           </p>
           <div class="actions">
@@ -21,7 +21,7 @@
             <button id="stop-button" type="button" disabled>Stop scanner</button>
           </div>
           <p id="status-message" class="status" role="status">
-            Click the page or initialize scanner to begin.
+            Press Initialize scanner to begin.
           </p>
         </div>
 
@@ -53,7 +53,7 @@
           <video id="input-video" playsinline></video>
           <canvas id="output-canvas" width="1280" height="720"></canvas>
           <div id="empty-state" class="empty-state">
-            <span>Click anywhere to initialize the camera</span>
+            <span>Press Initialize scanner to turn on the camera</span>
           </div>
         </div>
       </section>
@@ -108,7 +108,7 @@
         <ul>
           <li>Camera frames stay in the browser; no server upload is required.</li>
           <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
-          <li>Click anywhere on the page to initialize camera detection.</li>
+          <li>Press <strong>Initialize scanner</strong> to turn on camera detection.</li>
           <li>Show left hand, right hand, or both hands to draw labeled detection boxes.</li>
           <li>Press <kbd>Esc</kbd> to stop the camera.</li>
         </ul>
