@@ -3,63 +3,64 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SAO Hand Recognition</title>
+    <title>Hand Tracking Interface | Professional Hand Detection</title>
     <link rel="stylesheet" href="./web/styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <section class="top-hud" aria-label="Camera setup">
-        <div class="configuration-panel">
-          <div class="panel-title-row">
-            <p class="eyebrow">Hand recognition system</p>
-            <h2>Initialization procedure</h2>
-          </div>
-          <ol class="setup-list" aria-label="Initialization steps">
-            <li data-step="mediapipe">Load hand model</li>
-            <li data-step="camera">Activate camera</li>
-            <li data-step="hand">Identify hands</li>
-            <li data-step="fingers">Analyze fingers</li>
+    <main class="sao-container">
+      <header class="sao-header">
+        <h1>HAND DETECTION INTERFACE</h1>
+        <p>Professional hand tracking | Left and right hand recognition | Finger articulation</p>
+      </header>
+
+      <section class="setup-instruction" aria-label="Initialization protocol">
+        <div class="setup-text">
+          <div class="setup-label">INITIALIZATION PROTOCOL</div>
+          <ol class="setup-list setup-steps" aria-label="Initialization steps">
+            <li data-step="mediapipe"><strong>Step 1:</strong> Load hand detection model</li>
+            <li data-step="camera"><strong>Step 2:</strong> Establish camera connection</li>
+            <li data-step="hand"><strong>Step 3:</strong> Detect left and right hand landmarks</li>
+            <li data-step="fingers"><strong>Step 4:</strong> Compute finger extension states</li>
           </ol>
-          <div class="hand-slots" aria-label="Left and right hand initialization">
+        </div>
+        <div class="setup-side">
+          <div class="hand-slots" aria-label="Left and right hand status">
             <div class="hand-slot" data-hand-slot="Left">
-              Left hand <span>waiting</span>
+              Left hand: <span>waiting</span>
             </div>
             <div class="hand-slot" data-hand-slot="Right">
-              Right hand <span>waiting</span>
+              Right hand: <span>waiting</span>
             </div>
           </div>
-          <p id="detection-box-label" class="box-label">Detection boxes: waiting</p>
-        </div>
-
-        <div class="controls-panel">
-          <div class="actions">
-            <button id="start-button" type="button">Initialize camera</button>
-            <button id="stop-button" type="button" disabled>Stop camera</button>
-          </div>
-          <p id="status-message" class="status" role="status">
-            Press Initialize camera to begin.
-          </p>
+          <div class="quick-setup-status">status: awaiting initialization</div>
         </div>
       </section>
 
-      <section class="scan-layout" aria-label="Finger recognition camera and results">
-        <div class="camera-stage">
+      <div class="button-bar">
+        <button id="start-button" class="action-btn" type="button">Initialize camera</button>
+        <button id="stop-button" class="action-btn" type="button" disabled>Terminate stream</button>
+      </div>
+      <div id="status-message" role="status">System ready. Press Initialize camera to begin hand tracking.</div>
+
+      <section class="main-live-area" aria-label="Finger recognition camera and results">
+        <div class="video-master">
           <div class="video-frame">
             <video id="input-video" playsinline></video>
             <canvas id="output-canvas" width="1280" height="720"></canvas>
             <div id="empty-state" class="empty-state">
-              <span>Press Initialize camera to turn on the camera</span>
+              <span>Press Initialize camera to start detection</span>
             </div>
           </div>
         </div>
 
-        <aside class="results-panel" aria-label="Detection results">
+        <aside class="result-panel" aria-label="Detection results">
           <div class="results-header">
-            <div>
-              <p class="eyebrow">Recognition output</p>
-              <h2>Detection results</h2>
-            </div>
+            <h2>Live detection results</h2>
             <div id="index-result" class="index-result waiting">Index finger not detected</div>
+          </div>
+          <div class="config-card">
+            <h3>Detection status</h3>
+            <p id="detection-box-label" class="box-label">Detection boxes: waiting</p>
           </div>
           <dl class="stats-grid">
             <div>
@@ -97,17 +98,6 @@
             <p class="hands-empty">No hands configured yet.</p>
           </div>
         </aside>
-      </section>
-
-      <section class="notes">
-        <h2>Privacy and setup notes</h2>
-        <ul>
-          <li>Camera frames stay in the browser; no server upload is required.</li>
-          <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
-          <li>Press <strong>Initialize camera</strong> to turn on camera detection.</li>
-          <li>Show left hand, right hand, or both hands to draw labeled detection boxes.</li>
-          <li>Press <kbd>Esc</kbd> to stop the camera.</li>
-        </ul>
       </section>
     </main>
 

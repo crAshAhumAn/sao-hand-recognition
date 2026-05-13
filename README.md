@@ -18,12 +18,12 @@ python3 -m http.server 6463
 ```
 
 Open <http://localhost:6463>, press **Initialize camera** to turn on the
-camera, and show your left hand, right hand, or both hands. The page displays
-the initialization procedure first, then the video frame with live detection
-results in a separate right-side panel. It also shows left/right hand status,
-per-hand finger configuration, and a separate labeled detection box around each
-hand captured by the camera. Press **Stop camera** or `Esc` to release the
-webcam.
+camera, and show your left hand, right hand, or both hands. The page uses a
+professional HUD-style interface with a title, initialization protocol, camera
+controls, a large live video frame, and live detection results in a separate
+right-side panel. It also shows left/right hand status, per-hand finger
+configuration, and a separate labeled detection box around each hand captured by
+the camera. Press **Terminate stream** or `Esc` to release the webcam.
 
 ## Python desktop demo setup
 
