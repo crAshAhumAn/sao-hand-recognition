@@ -26,6 +26,11 @@ height remains visible instead of being cropped. Camera startup uses direct
 browser `getUserMedia` access and does not start from page clicks. Press
 **Terminate stream** or `Esc` to release the webcam.
 
+After both left and right hand landmarks are detected, the **Open interaction
+screen** button becomes available. That view shows the output canvas across the
+screen with a center target; moving any detected fingertip onto the target
+triggers a visible "clicked" feedback response.
+
 ## Python desktop demo setup
 
 Use Python 3.10 or newer.

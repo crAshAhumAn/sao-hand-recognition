@@ -10,6 +10,11 @@ const fingerCount = document.querySelector("#finger-count");
 const handState = document.querySelector("#hand-state");
 const detectionBoxLabel = document.querySelector("#detection-box-label");
 const handsList = document.querySelector("#hands-list");
+const handResultsBody = document.querySelector("#hand-results-body");
+const interactionPageButton = document.querySelector("#interaction-page-button");
+const interactionTarget = document.querySelector("#interaction-target");
+const interactionFeedback = document.querySelector("#interaction-feedback");
+const backButton = document.querySelector("#back-button");
 const stepItems = new Map(
   Array.from(document.querySelectorAll("[data-step]")).map((item) => [item.dataset.step, item]),
 );
@@ -19,13 +24,6 @@ const handSlotItems = new Map(
     item,
   ]), 
 ); 
-const fingerItems = new Map(
-  Array.from(document.querySelectorAll("[data-finger]")).map((item) => [
-    item.dataset.finger,
-    item,
-  ]),
-);
-
 const FINGER_SPECS = [
   ["thumb", 2, 3, 4, 2],
   ["index", 5, 6, 8, 6],
@@ -50,6 +48,10 @@ let isRunning = false;
 let isInitializing = false;
 let animationFrameId = null;
 let videoRect = { x: 0, y: 0, width: 1, height: 1 };
+let canvasLocked = false;
+let interactionMode = false;
+let interactionTriggered = false;
+let latestHandResults = [];
 
 function setStatus(message, state = "") {
   statusMessage.textContent = message;
@@ -165,7 +167,11 @@ function getHandednessLabel(results, handLandmarks, index) {
   return handLandmarks[0]?.x < 0.5 ? "Right" : "Left";
 }
 
-function resizeCanvasToDisplaySize() {
+function resizeCanvasToDisplaySize({ force = false } = {}) {
+  if (canvasLocked && !force) {
+    return;
+  }
+
   const rect = canvasElement.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect.width));
   const height = Math.max(1, Math.round(rect.height));
@@ -203,6 +209,18 @@ function mapLandmark(point) {
     x: videoRect.x + point.x * videoRect.width,
     y: videoRect.y + point.y * videoRect.height,
   };
+}
+
+function canvasPointToViewport(point) {
+  const canvasRect = canvasElement.getBoundingClientRect();
+  return {
+    x: canvasRect.left + (point.x / canvasElement.width) * canvasRect.width,
+    y: canvasRect.top + (point.y / canvasElement.height) * canvasRect.height,
+  };
+}
+
+function isPointInsideRect(point, rect) {
+  return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
 }
 
 function drawHandLandmarks(landmarks, color) {
@@ -324,6 +342,100 @@ function updateHandCards(handResults) {
   handResults.forEach((result) => handsList.append(createHandCard(result)));
 }
 
+function renderHandResultsTable(handResults) {
+  handResultsBody.replaceChildren();
+
+  if (handResults.length === 0) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.textContent = "No hand data available.";
+    row.append(cell);
+    handResultsBody.append(row);
+    return;
+  }
+
+  for (const handName of ["Left", "Right"]) {
+    const handResult = handResults.find((result) => result.handedness === handName);
+
+    if (!handResult) {
+      const row = document.createElement("tr");
+      row.className = "missing-hand-row";
+      row.innerHTML = `<td>${handName}</td><td colspan="3">waiting</td>`;
+      handResultsBody.append(row);
+      continue;
+    }
+
+    for (const detection of handResult.state.detections) {
+      const row = document.createElement("tr");
+      row.classList.toggle("active", detection.isExtended);
+      row.innerHTML = `
+        <td>${handName}</td>
+        <td>${detection.name}</td>
+        <td><span class="finger-state">${detection.isExtended ? "on" : "off"}</span></td>
+        <td>${Math.round(detection.angleDegrees)} deg</td>
+      `;
+      handResultsBody.append(row);
+    }
+  }
+}
+
+function updateInteractionAccess(handResults) {
+  const hasLeft = handResults.some((result) => result.handedness === "Left");
+  const hasRight = handResults.some((result) => result.handedness === "Right");
+  const ready = hasLeft && hasRight;
+  interactionPageButton.disabled = !ready;
+  interactionPageButton.textContent = ready
+    ? "Open interaction screen"
+    : "Detect left and right hands first";
+}
+
+function checkInteractionTarget(handResults) {
+  if (!interactionMode || interactionTriggered || handResults.length === 0) {
+    return;
+  }
+
+  const targetRect = interactionTarget.getBoundingClientRect();
+  for (const handResult of handResults) {
+    for (const detection of handResult.state.detections) {
+      const viewportPoint = canvasPointToViewport(mapLandmark(detection.tip));
+      if (isPointInsideRect(viewportPoint, targetRect)) {
+        interactionTriggered = true;
+        interactionFeedback.textContent = `Clicked by ${handResult.label} ${detection.name}!`;
+        interactionFeedback.classList.add("clicked");
+        interactionTarget.classList.add("target-hit");
+        window.setTimeout(() => {
+          interactionTriggered = false;
+          interactionFeedback.textContent = "Move a fingertip to the target";
+          interactionFeedback.classList.remove("clicked");
+          interactionTarget.classList.remove("target-hit");
+        }, 1000);
+        return;
+      }
+    }
+  }
+}
+
+function openInteractionScreen() {
+  if (interactionPageButton.disabled) {
+    return;
+  }
+
+  interactionMode = true;
+  interactionTriggered = false;
+  document.body.classList.add("interaction-mode");
+  interactionFeedback.textContent = "Move a fingertip to the target";
+  interactionFeedback.classList.remove("clicked");
+  interactionTarget.classList.remove("target-hit");
+}
+
+function closeInteractionScreen() {
+  interactionMode = false;
+  document.body.classList.remove("interaction-mode");
+  interactionFeedback.classList.remove("clicked");
+  interactionTarget.classList.remove("target-hit");
+}
+
 function updateResults(handResults) {
   const totalExtendedFingers = handResults.reduce(
     (total, result) => total + result.state.extendedCount,
@@ -336,27 +448,11 @@ function updateResults(handResults) {
   updateDetectionBoxLabel(handResults);
   updateHandSlots(handResults);
   updateHandCards(handResults);
-  indexResult.textContent = anyIndexExtended
-    ? "Index finger extended"
-    : "Index finger state: not detected";
+  renderHandResultsTable(handResults);
+  updateInteractionAccess(handResults);
+  indexResult.textContent = anyIndexExtended ? "Index finger extended" : "Awaiting finger extension";
   indexResult.classList.toggle("detected", anyIndexExtended);
   indexResult.classList.toggle("waiting", !anyIndexExtended);
-
-  for (const [fingerName, item] of fingerItems.entries()) {
-    const matchingDetections = handResults
-      .map((result) => result.state.byName[fingerName])
-      .filter(Boolean);
-    const activeCount = matchingDetections.filter((detection) => detection.isExtended).length;
-    const maxAngle = matchingDetections.length
-      ? Math.max(...matchingDetections.map((detection) => detection.angleDegrees))
-      : null;
-
-    item.classList.toggle("active", activeCount > 0);
-    item.querySelector(".finger-state").textContent =
-      handResults.length === 0 ? "off" : `${activeCount}/${handResults.length} on`;
-    item.querySelector(".finger-angle").textContent =
-      maxAngle === null ? "Angle: --" : `Angle: ${Math.round(maxAngle)} deg`;
-  }
 }
 
 function resetResults() {
@@ -365,18 +461,15 @@ function resetResults() {
   detectionBoxLabel.textContent = "Detection boxes: waiting";
   updateHandSlots([]);
   updateHandCards([]);
-  indexResult.textContent = "Index finger state: not detected";
+  renderHandResultsTable([]);
+  updateInteractionAccess([]);
+  indexResult.textContent = "Awaiting hand landmarks";
   indexResult.classList.remove("detected");
   indexResult.classList.add("waiting");
-
-  for (const item of fingerItems.values()) {
-    item.classList.remove("active");
-    item.querySelector(".finger-state").textContent = "off";
-    item.querySelector(".finger-angle").textContent = "Angle: --";
-  }
 }
 
 function drawNoHandFrame() {
+  latestHandResults = [];
   resetResults();
   setStep("hand", "active");
   setStep("fingers", "");
@@ -390,7 +483,6 @@ function onResults(results) {
     return;
   }
 
-  resizeCanvasToDisplaySize();
   updateVideoRect(results.image);
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -425,7 +517,9 @@ function onResults(results) {
     return (order[a.handedness] ?? 2) - (order[b.handedness] ?? 2);
   });
 
+  latestHandResults = handResults;
   updateResults(handResults);
+  checkInteractionTarget(handResults);
   setStep("fingers", "done");
   canvasCtx.restore();
 }
@@ -489,6 +583,10 @@ async function startCamera() {
     videoElement.playsInline = true;
     videoElement.srcObject = stream;
     await videoElement.play();
+    canvasLocked = false;
+    resizeCanvasToDisplaySize({ force: true });
+    canvasLocked = true;
+    updateVideoRect(videoElement);
     isRunning = true;
 
     const processFrame = async () => {
@@ -540,6 +638,9 @@ function stopVideoStream() {
 function stopCamera() {
   isRunning = false;
   stopVideoStream();
+  canvasLocked = false;
+  latestHandResults = [];
+  closeInteractionScreen();
   startButton.disabled = false;
   stopButton.disabled = true;
   emptyState.classList.remove("hidden");
@@ -551,12 +652,17 @@ function stopCamera() {
 
 startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", stopCamera);
+interactionPageButton.addEventListener("click", openInteractionScreen);
+backButton.addEventListener("click", closeInteractionScreen);
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && isRunning) {
-    stopCamera();
+    if (interactionMode) {
+      closeInteractionScreen();
+    } else {
+      stopCamera();
+    }
   }
 });
-window.addEventListener("resize", resizeCanvasToDisplaySize);
 
 resizeCanvasToDisplaySize();
 resetResults();
