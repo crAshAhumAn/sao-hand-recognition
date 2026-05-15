@@ -17,8 +17,8 @@ const handSlotItems = new Map(
   Array.from(document.querySelectorAll("[data-hand-slot]")).map((item) => [
     item.dataset.handSlot,
     item,
-  ]),
-);
+  ]), 
+); 
 const fingerItems = new Map(
   Array.from(document.querySelectorAll("[data-finger]")).map((item) => [
     item.dataset.finger,
@@ -33,7 +33,7 @@ const FINGER_SPECS = [
   ["ring", 13, 14, 16, 14],
   ["pinky", 17, 18, 20, 18],
 ];
-
+ 
 const HAND_CONNECTIONS = window.HAND_CONNECTIONS ?? [];
 const HAND_COLORS = {
   Left: "#65a8ff",
