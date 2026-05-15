@@ -14,7 +14,7 @@ const stepItems = new Map(
     item.dataset.step,
     item,
   ]),
-);
+); 
 const fingerItems = new Map(
   Array.from(document.querySelectorAll("[data-finger]")).map((item) => [
     item.dataset.finger,
