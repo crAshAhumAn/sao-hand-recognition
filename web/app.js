@@ -49,6 +49,7 @@ let hands = null;
 let isRunning = false;
 let isInitializing = false;
 let animationFrameId = null;
+let videoRect = { x: 0, y: 0, width: 1, height: 1 };
 
 function setStatus(message, state = "") {
   statusMessage.textContent = message;
@@ -144,10 +145,10 @@ function getHandBoundingBox(landmarks, padding = 0.045) {
   const maxY = Math.min(1, Math.max(...ys) + padding);
 
   return {
-    x: minX * canvasElement.width,
-    y: minY * canvasElement.height,
-    width: (maxX - minX) * canvasElement.width,
-    height: (maxY - minY) * canvasElement.height,
+    x: videoRect.x + minX * videoRect.width,
+    y: videoRect.y + minY * videoRect.height,
+    width: (maxX - minX) * videoRect.width,
+    height: (maxY - minY) * videoRect.height,
     normalized: { minX, minY, maxX, maxY },
   };
 }
@@ -175,6 +176,64 @@ function resizeCanvasToDisplaySize() {
   }
 }
 
+function getContainRect(sourceWidth, sourceHeight, targetWidth, targetHeight) {
+  if (!sourceWidth || !sourceHeight) {
+    return { x: 0, y: 0, width: targetWidth, height: targetHeight };
+  }
+
+  const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight);
+  const width = sourceWidth * scale;
+  const height = sourceHeight * scale;
+  return {
+    x: (targetWidth - width) / 2,
+    y: (targetHeight - height) / 2,
+    width,
+    height,
+  };
+}
+
+function updateVideoRect(source) {
+  const sourceWidth = videoElement.videoWidth || source?.width || canvasElement.width;
+  const sourceHeight = videoElement.videoHeight || source?.height || canvasElement.height;
+  videoRect = getContainRect(sourceWidth, sourceHeight, canvasElement.width, canvasElement.height);
+}
+
+function mapLandmark(point) {
+  return {
+    x: videoRect.x + point.x * videoRect.width,
+    y: videoRect.y + point.y * videoRect.height,
+  };
+}
+
+function drawHandLandmarks(landmarks, color) {
+  canvasCtx.save();
+  canvasCtx.strokeStyle = color;
+  canvasCtx.lineWidth = 3;
+
+  for (const [startIndex, endIndex] of HAND_CONNECTIONS) {
+    const start = landmarks[startIndex];
+    const end = landmarks[endIndex];
+    if (!start || !end) {
+      continue;
+    }
+    const startPoint = mapLandmark(start);
+    const endPoint = mapLandmark(end);
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(startPoint.x, startPoint.y);
+    canvasCtx.lineTo(endPoint.x, endPoint.y);
+    canvasCtx.stroke();
+  }
+
+  for (const landmark of landmarks) {
+    const point = mapLandmark(landmark);
+    canvasCtx.beginPath();
+    canvasCtx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+    canvasCtx.fillStyle = "#ffffff";
+    canvasCtx.fill();
+  }
+  canvasCtx.restore();
+}
+
 function drawDetectionBox(box, label, color) {
   canvasCtx.save();
   canvasCtx.strokeStyle = color;
@@ -192,8 +251,7 @@ function drawDetectionBox(box, label, color) {
 }
 
 function drawFingerTip(detection, color) {
-  const x = detection.tip.x * canvasElement.width;
-  const y = detection.tip.y * canvasElement.height;
+  const { x, y } = mapLandmark(detection.tip);
   canvasCtx.beginPath();
   canvasCtx.arc(x, y, 8, 0, Math.PI * 2);
   canvasCtx.fillStyle = detection.isExtended ? color : "rgba(255,255,255,0.58)";
@@ -333,9 +391,10 @@ function onResults(results) {
   }
 
   resizeCanvasToDisplaySize();
+  updateVideoRect(results.image);
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(results.image, videoRect.x, videoRect.y, videoRect.width, videoRect.height);
 
   const detectedHands = results.multiHandLandmarks ?? [];
   if (detectedHands.length === 0) {
@@ -354,15 +413,7 @@ function onResults(results) {
     const box = getHandBoundingBox(handLandmarks);
     const state = detectFingers(handLandmarks);
 
-    window.drawConnectors?.(canvasCtx, handLandmarks, HAND_CONNECTIONS, {
-      color,
-      lineWidth: 4,
-    });
-    window.drawLandmarks?.(canvasCtx, handLandmarks, {
-      color: "#ffffff",
-      lineWidth: 2,
-      radius: 3,
-    });
+    drawHandLandmarks(handLandmarks, color);
     drawDetectionBox(box, label, color);
     state.detections.forEach((detection) => drawFingerTip(detection, color));
 
@@ -382,6 +433,9 @@ function onResults(results) {
 function ensureMediaPipeLoaded() {
   if (!window.Hands) {
     throw new Error("MediaPipe Hands is not loaded. Check the network connection.");
+  }
+  if (!window.isSecureContext && !["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    throw new Error("Camera access requires HTTPS or localhost.");
   }
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error("Camera access is unavailable. Use localhost or HTTPS in a supported browser.");
@@ -431,8 +485,9 @@ async function startCamera() {
       audio: false,
     });
 
-    videoElement.srcObject = stream;
     videoElement.muted = true;
+    videoElement.playsInline = true;
+    videoElement.srcObject = stream;
     await videoElement.play();
     isRunning = true;
 
@@ -440,8 +495,13 @@ async function startCamera() {
       if (!isRunning || !hands) {
         return;
       }
-      if (videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-        await hands.send({ image: videoElement });
+      try {
+        if (videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          await hands.send({ image: videoElement });
+        }
+      } catch (error) {
+        console.error(error);
+        setStatus(`Detection error: ${error.message}`);
       }
       animationFrameId = requestAnimationFrame(processFrame);
     };
