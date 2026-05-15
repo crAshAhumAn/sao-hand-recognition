@@ -21,9 +21,10 @@ Open <http://localhost:6463>, press **Initialize camera** to turn on the camera,
 and show your left hand, right hand, or both hands. The page uses a professional
 HUD-style interface with a top title, initialization protocol, camera controls,
 a taller live video frame, and live detection results in a separate right-side
-panel. Camera startup uses direct browser `getUserMedia` access and does not
-start from page clicks. Press **Terminate stream** or `Esc` to release the
-webcam.
+panel. The camera image is rendered with a contain/letterbox fit so its full
+height remains visible instead of being cropped. Camera startup uses direct
+browser `getUserMedia` access and does not start from page clicks. Press
+**Terminate stream** or `Esc` to release the webcam.
 
 ## Python desktop demo setup
 
