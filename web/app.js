@@ -336,7 +336,7 @@ function onResults(results) {
   resizeCanvasToDisplaySize();
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(results.image, 0, 0, results.image.videoWidth || results.image.width, results.image.videoHeight || results.image.height, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(results.image, 0, 0, results.image.videoWidth || results.image.width, results.image.videoHeight || results.image.height, 0, 0, canvasElement.width, canvasElement.height);
 
   const detectedHands = results.multiHandLandmarks ?? [];
   if (detectedHands.length === 0) {
