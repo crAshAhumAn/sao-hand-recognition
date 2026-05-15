@@ -12,17 +12,17 @@
         <p class="eyebrow">Hand recognition starter</p>
         <h1>Click to initialize hand detection</h1>
         <p class="hero-copy">
-          Click anywhere on the page to start initialization, allow camera access,
-          and show one hand. The app configures the hand landmarks on screen,
+          Press Initialize camera to request camera access, then show one hand.
+          The app configures the hand landmarks on screen,
           draws a detection box, and labels each finger.
         </p>
         <div class="actions">
           <button id="start-button" type="button">Initialize camera</button>
           <button id="stop-button" type="button" disabled>Stop camera</button>
         </div>
-        <p id="status-message" class="status" role="status">
-          Click the page or the initialize button to begin.
-        </p>
+          <p id="status-message" class="status" role="status">
+            Press Initialize camera to begin.
+          </p>
       </section>
 
       <section class="recognition-card" aria-label="Finger recognition camera">
@@ -30,7 +30,7 @@
           <video id="input-video" playsinline></video>
           <canvas id="output-canvas" width="1280" height="720"></canvas>
           <div id="empty-state" class="empty-state">
-            <span>Click anywhere to initialize the camera</span>
+            <span>Press Initialize camera to start detection</span>
           </div>
         </div>
 
@@ -87,13 +87,12 @@
         <ul>
           <li>Camera frames stay in the browser; no server upload is required.</li>
           <li>Run from <code>localhost</code> or HTTPS so the browser allows camera access.</li>
-          <li>Click anywhere on the page to initialize camera detection.</li>
+          <li>Press <strong>Initialize camera</strong> to turn on camera detection.</li>
           <li>Press <kbd>Esc</kbd> to stop the camera.</li>
         </ul>
       </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script type="module" src="./app.js"></script>

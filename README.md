@@ -13,10 +13,10 @@ camera APIs, so serve it from `localhost` or HTTPS:
 python3 -m http.server --directory web 8000
 ```
 
-Open <http://localhost:8000>, click anywhere on the page to initialize the
+Open <http://localhost:8000>, press **Initialize camera** to turn on the
 camera, and show one hand. The page displays initialization steps, the live
-finger configuration, and a detection box around the hand captured by the
-camera. Press **Stop camera** or `Esc` to release the webcam.
+finger configuration, and a taller detection frame around the hand captured by
+the camera. Press **Stop camera** or `Esc` to release the webcam.
 
 ## Python desktop demo setup
 

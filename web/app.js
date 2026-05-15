@@ -35,6 +35,7 @@ let hands = null;
 let camera = null;
 let isRunning = false;
 let isInitializing = false;
+let animationFrameId = null;
 
 function setStatus(message, state = "") {
   statusMessage.textContent = message;
@@ -271,7 +272,7 @@ function onResults(results) {
 }
 
 function ensureMediaPipeLoaded() {
-  if (!window.Hands || !window.Camera) {
+  if (!window.Hands) {
     throw new Error("MediaPipe scripts are not loaded. Check your network connection.");
   }
 }
@@ -309,16 +310,38 @@ async function startCamera() {
     setStep("mediapipe", "done");
     setStep("camera", "active");
     setStatus("Waiting for camera permission...", "initializing");
-    camera = new window.Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({ image: videoElement });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: "user",
       },
-      width: 1280,
-      height: 720,
+      audio: false,
     });
 
+    videoElement.srcObject = stream;
+    await videoElement.play();
     isRunning = true;
-    await camera.start();
+    camera = {
+      stop() {
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+      },
+    };
+
+    const processFrame = async () => {
+      if (!isRunning || !hands) {
+        return;
+      }
+
+      if (videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        await hands.send({ image: videoElement });
+      }
+      animationFrameId = requestAnimationFrame(processFrame);
+    };
+    animationFrameId = requestAnimationFrame(processFrame);
     setStep("camera", "done");
     setStep("hand", "active");
     emptyState.classList.add("hidden");
@@ -357,18 +380,11 @@ function stopCamera() {
   resetSteps();
   resetResults();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  setStatus("Click the page or the initialize button to begin.");
+  setStatus("Press Initialize camera to begin.");
 }
 
 startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", stopCamera);
-document.addEventListener("click", (event) => {
-  if (event.target.closest("#stop-button")) {
-    return;
-  }
-
-  startCamera();
-});
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && isRunning) {
     stopCamera();

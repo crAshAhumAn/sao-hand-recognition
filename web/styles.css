@@ -145,6 +145,7 @@ h2 {
   position: relative;
   overflow: hidden;
   aspect-ratio: 16 / 9;
+  min-height: 560px;
 }
 
 #input-video,
@@ -319,5 +320,9 @@ h2 {
 
   .recognition-card {
     grid-template-columns: 1fr;
+  }
+
+  .video-frame {
+    min-height: 420px;
   }
 }
