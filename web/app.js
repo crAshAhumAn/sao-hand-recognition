@@ -54,6 +54,7 @@ let interactionMode = isInteractionPage;
 let interactionTriggered = false;
 let latestHandResults = [];
 let bothHandsCompleted = false;
+let isProcessingFrame = false;
 
 function setStatus(message, state = "") {
   statusMessage.textContent = message;
@@ -341,21 +342,14 @@ function updateHandCards(handResults) {
     return;
   }
 
-  handResults.forEach((result) => handsList.append(createHandCard(result)));
+  // Kept for screen-reader status only; the visible result table is stable.
+  const summary = document.createElement("p");
+  summary.textContent = handResults.map((result) => result.label).join(", ");
+  handsList.append(summary);
 }
 
 function renderHandResultsTable(handResults) {
   handResultsBody.replaceChildren();
-
-  if (handResults.length === 0) {
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-    cell.colSpan = 3;
-    cell.textContent = "No hand data available.";
-    row.append(cell);
-    handResultsBody.append(row);
-    return;
-  }
 
   const leftHand = handResults.find((result) => result.handedness === "Left");
   const rightHand = handResults.find((result) => result.handedness === "Right");
@@ -380,15 +374,14 @@ function updateInteractionAccess(handResults) {
   const ready = hasLeft && hasRight;
   if (ready) {
     bothHandsCompleted = true;
+    setStep("mediapipe", "done");
+    setStep("camera", "done");
     setStep("hand", "done");
     setStep("fingers", "done");
   }
   interactionPageButton.disabled = !bothHandsCompleted;
-  interactionPageButton.textContent = ready
-    ? "Open interaction screen"
-    : bothHandsCompleted
-      ? "Open interaction screen"
-      : "Detect left and right hands first";
+  interactionPageButton.classList.toggle("ready", bothHandsCompleted);
+  interactionPageButton.textContent = "Open interaction screen";
 }
 
 function checkInteractionTarget(handResults) {
@@ -478,16 +471,25 @@ function resetResults() {
   indexResult.classList.add("waiting");
 }
 
+function restoreCompletedSteps() {
+  if (!bothHandsCompleted) {
+    return;
+  }
+
+  setStep("mediapipe", "done");
+  setStep("camera", "done");
+  setStep("hand", "done");
+  setStep("fingers", "done");
+}
+
 function drawNoHandFrame() {
   latestHandResults = [];
   resetResults();
-  if (bothHandsCompleted) {
-    setStep("hand", "done");
-    setStep("fingers", "done");
-  } else {
+  if (!bothHandsCompleted) {
     setStep("hand", "active");
     setStep("fingers", "");
   }
+  restoreCompletedSteps();
   canvasCtx.font = "700 22px monospace";
   canvasCtx.fillStyle = "#ffd166";
   canvasCtx.fillText("Present left hand, right hand, or both hands", 24, 44);
@@ -565,9 +567,9 @@ function createHandsPipeline() {
 
   pipeline.setOptions({
     maxNumHands: 2,
-    modelComplexity: 1,
-    minDetectionConfidence: 0.7,
-    minTrackingConfidence: 0.6,
+    modelComplexity: 0,
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.5,
   });
   pipeline.onResults(onResults);
   return pipeline;
@@ -617,13 +619,17 @@ async function startCamera() {
       if (!isRunning || !hands) {
         return;
       }
-      try {
-        if (videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-          await hands.send({ image: videoElement });
-        }
-      } catch (error) {
-        console.error(error);
-        setStatus(`Detection error: ${error.message}`);
+      if (!isProcessingFrame && videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        isProcessingFrame = true;
+        hands
+          .send({ image: videoElement })
+          .catch((error) => {
+            console.error(error);
+            setStatus(`Detection error: ${error.message}`);
+          })
+          .finally(() => {
+            isProcessingFrame = false;
+          });
       }
       animationFrameId = requestAnimationFrame(processFrame);
     };
@@ -651,6 +657,7 @@ function stopVideoStream() {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
   }
+  isProcessingFrame = false;
 
   const stream = videoElement.srcObject;
   if (stream && typeof stream.getTracks === "function") {
@@ -664,7 +671,6 @@ function stopCamera() {
   stopVideoStream();
   canvasLocked = false;
   latestHandResults = [];
-  bothHandsCompleted = false;
   document.body.classList.remove("camera-running");
   if (!isInteractionPage) {
     closeInteractionScreen();
@@ -674,6 +680,7 @@ function stopCamera() {
   emptyState.classList.remove("hidden");
   resetSteps();
   resetResults();
+  restoreCompletedSteps();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   setStatus("Camera stream terminated. Press Initialize camera to restart.");
 }
