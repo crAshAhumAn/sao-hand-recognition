@@ -20,7 +20,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  overflow: hidden;
+  overflow-y: auto;
   background:
     radial-gradient(circle at 20% 30%, rgba(60, 199, 255, 0.12), transparent 28rem),
     radial-gradient(circle at 90% 80%, rgba(42, 255, 208, 0.1), transparent 24rem),
