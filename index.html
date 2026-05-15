@@ -39,6 +39,15 @@
       <div class="button-bar">
         <button id="start-button" class="action-btn" type="button">Initialize camera</button>
         <button id="stop-button" class="action-btn" type="button" disabled>Terminate stream</button>
+        <button
+          id="interaction-page-button"
+          class="action-btn secondary-action"
+          type="button"
+          data-interaction-href="./interaction.html"
+          disabled
+        >
+          Open interaction screen
+        </button>
       </div>
       <div id="status-message" role="status">
         System ready. Press Initialize camera to begin hand tracking.
@@ -88,15 +97,6 @@
               </tr>
             </tbody>
           </table>
-          <button
-            id="interaction-page-button"
-            class="action-btn secondary-action"
-            type="button"
-            data-interaction-href="./interaction.html"
-            disabled
-          >
-            Open interaction screen
-          </button>
           <div id="hands-list" class="hands-list" aria-live="polite">
             <p class="hands-empty">No hand data available.</p>
           </div>

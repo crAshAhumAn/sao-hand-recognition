@@ -215,6 +215,14 @@ select {
   opacity: 0.5;
 }
 
+.action-btn.ready:not(:disabled) {
+  border-color: #00ff66;
+  color: #ffffff;
+  box-shadow:
+    0 0 14px rgba(0, 255, 102, 0.75),
+    inset 0 0 12px rgba(0, 255, 102, 0.16);
+}
+
 #status-message {
   margin: 0 1rem;
   border-radius: 8px;
@@ -492,8 +500,7 @@ select {
 }
 
 .secondary-action {
-  width: 100%;
-  margin-top: -0.25rem;
+  min-width: 210px;
 }
 
 .hand-card {
@@ -501,6 +508,10 @@ select {
   border-radius: 10px;
   padding: 0.65rem;
   background: rgba(0, 0, 0, 0.35);
+}
+
+.hands-list {
+  display: none;
 }
 
 .hand-card h3 {

@@ -28,6 +28,9 @@ browser `getUserMedia` access and does not start from page clicks. Press
 
 The results panel shows a table with `Fingers`, `Left`, and `Right` columns, and
 the left/right columns only report whether each finger is `on` or `off`.
+After both hands are detected, initialization steps 3 and 4 remain marked as
+complete even if the stream is terminated, and the interaction-page button stays
+available beside the stream controls.
 
 After both left and right hand landmarks are detected, the **Open interaction
 screen** button becomes available and links to `interaction.html`. That second
