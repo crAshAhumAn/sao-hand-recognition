@@ -29,7 +29,7 @@ const FINGER_SPECS = [
   ["ring", 13, 14, 16, 14],
   ["pinky", 17, 18, 20, 18],
 ];
-
+ 
 const HAND_CONNECTIONS = window.HAND_CONNECTIONS ?? [];
 let hands = null;
 let camera = null;
