@@ -165,9 +165,10 @@ function getHandednessLabel(results, handLandmarks, index) {
 }
 
 function resizeCanvasToDisplaySize() {
-  const rect = canvasElement.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect.width));
-  const height = Math.max(1, Math.round(rect.height));
+  if (!video) return;
+  
+  const width = video.videoWidth;
+  const height = video.videoHeight;
 
   if (canvasElement.width !== width || canvasElement.height !== height) {
     canvasElement.width = width;
@@ -335,7 +336,7 @@ function onResults(results) {
   resizeCanvasToDisplaySize();
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(results.image, 0, 0, results.image.videoWidth || results.image.width, results.image.videoHeight || results.image.height, canvasElement.width, canvasElement.height);
 
   const detectedHands = results.multiHandLandmarks ?? [];
   if (detectedHands.length === 0) {
@@ -498,6 +499,6 @@ window.addEventListener("keydown", (event) => {
 });
 window.addEventListener("resize", resizeCanvasToDisplaySize);
 
-resizeCanvasToDisplaySize();
+resizeCanvasToDisplaySize(results.image);
 resetResults();
 resetSteps();
