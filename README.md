@@ -89,7 +89,8 @@ finger-detector --no-mirror
   fingertip distance from the wrist. This makes the basic heuristic less
   sensitive to hand rotation than a simple up/down pixel check.
 - `detect_index_finger(...)` exposes the first focused step for finger-first
-  recognition in Python, while `web/app.js` mirrors that logic for the website.
+  recognition in Python, while `web/app.js` implements matching browser logic
+  for the website.
 
 ## Test the detection logic
 

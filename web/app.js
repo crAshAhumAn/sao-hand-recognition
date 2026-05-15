@@ -38,15 +38,12 @@ const HAND_COLORS = {
   Right: "#33ffcc",
   Unknown: "#ffd166",
 };
-const MIRRORED_HANDEDNESS = {
-  Left: "Right",
-  Right: "Left",
-};
 
 let hands = null;
 let isRunning = false;
 let isInitializing = false;
 let animationFrameId = null;
+let videoFrameCallbackId = null;
 let videoRect = { x: 0, y: 0, width: 1, height: 1 };
 let canvasLocked = false;
 const isInteractionPage = document.body.dataset.page === "interaction";
@@ -164,7 +161,7 @@ function getHandednessLabel(results, handLandmarks, index) {
     handedness?.label ?? handedness?.classification?.[0]?.label ?? handedness?.[0]?.label;
 
   if (label === "Left" || label === "Right") {
-    return MIRRORED_HANDEDNESS[label];
+    return label;
   }
 
   return handLandmarks[0]?.x < 0.5 ? "Right" : "Left";
@@ -568,7 +565,7 @@ function createHandsPipeline() {
   pipeline.setOptions({
     maxNumHands: 2,
     modelComplexity: 0,
-    minDetectionConfidence: 0.6,
+    minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5,
   });
   pipeline.onResults(onResults);
@@ -615,25 +612,40 @@ async function startCamera() {
     isRunning = true;
     document.body.classList.add("camera-running");
 
+    const scheduleFrame = () => {
+      if (!isRunning) {
+        return;
+      }
+
+      if ("requestVideoFrameCallback" in videoElement) {
+        videoFrameCallbackId = videoElement.requestVideoFrameCallback(processFrame);
+      } else {
+        animationFrameId = requestAnimationFrame(processFrame);
+      }
+    };
+
     const processFrame = async () => {
       if (!isRunning || !hands) {
         return;
       }
-      if (!isProcessingFrame && videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-        isProcessingFrame = true;
-        hands
-          .send({ image: videoElement })
-          .catch((error) => {
-            console.error(error);
-            setStatus(`Detection error: ${error.message}`);
-          })
-          .finally(() => {
-            isProcessingFrame = false;
-          });
+
+      if (isProcessingFrame || videoElement.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+        scheduleFrame();
+        return;
       }
-      animationFrameId = requestAnimationFrame(processFrame);
+
+      try {
+        isProcessingFrame = true;
+        await hands.send({ image: videoElement });
+      } catch (error) {
+        console.error(error);
+        setStatus(`Detection error: ${error.message}`);
+      } finally {
+        isProcessingFrame = false;
+      }
+      scheduleFrame();
     };
-    animationFrameId = requestAnimationFrame(processFrame);
+    scheduleFrame();
 
     setStep("camera", "done");
     setStep("hand", "active");
@@ -656,6 +668,10 @@ function stopVideoStream() {
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
+  }
+  if (videoFrameCallbackId !== null && "cancelVideoFrameCallback" in videoElement) {
+    videoElement.cancelVideoFrameCallback(videoFrameCallbackId);
+    videoFrameCallbackId = null;
   }
   isProcessingFrame = false;
 
