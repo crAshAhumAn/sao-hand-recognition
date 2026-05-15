@@ -288,6 +288,7 @@ select {
   display: block;
   border-radius: 1rem;
   pointer-events: none;
+  object-fit: contain;
 }
 
 .empty-state {
