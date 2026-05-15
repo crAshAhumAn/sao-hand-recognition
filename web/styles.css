@@ -460,6 +460,42 @@ select {
   box-shadow: 0 0 4px #00ff66;
 }
 
+.hand-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #010b14;
+  font-size: 0.76rem;
+}
+
+.hand-results-table th,
+.hand-results-table td {
+  border-bottom: 1px solid rgba(42, 255, 208, 0.12);
+  padding: 0.42rem 0.5rem;
+  text-align: left;
+}
+
+.hand-results-table th {
+  color: #9cdbff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hand-results-table tr.active td {
+  background: rgba(0, 255, 102, 0.1);
+}
+
+.hand-results-table .missing-hand-row td {
+  color: #8aa3b8;
+}
+
+.secondary-action {
+  width: 100%;
+  margin-top: -0.25rem;
+}
+
 .hand-card {
   border-left: 3px solid var(--hand-color, #2affc0);
   border-radius: 10px;
@@ -499,6 +535,112 @@ select {
 
 .hand-finger-list li.active {
   background: rgba(0, 255, 102, 0.16);
+}
+
+.interaction-target,
+.interaction-feedback,
+.back-button {
+  display: none;
+}
+
+.interaction-mode {
+  padding: 0;
+  overflow: hidden;
+}
+
+.interaction-mode .sao-container {
+  width: 100vw;
+  max-width: none;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background: #000000;
+}
+
+.interaction-mode .sao-header,
+.interaction-mode .setup-instruction,
+.interaction-mode .button-bar,
+.interaction-mode #status-message,
+.interaction-mode .result-panel {
+  display: none;
+}
+
+.interaction-mode .main-live-area {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  height: 100vh;
+  min-height: 100vh;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #000000;
+}
+
+.interaction-mode .video-master,
+.interaction-mode .video-frame {
+  min-height: 100vh;
+  border-radius: 0;
+}
+
+.interaction-mode #output-canvas,
+.interaction-mode #input-video {
+  border-radius: 0;
+}
+
+.interaction-mode .interaction-target {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 40;
+  display: block;
+  min-width: 190px;
+  border: 2px solid #2affc0;
+  border-radius: 999px;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.74);
+  color: #bbffff;
+  box-shadow:
+    0 0 18px rgba(42, 255, 192, 0.65),
+    inset 0 0 18px rgba(42, 255, 192, 0.18);
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+}
+
+.interaction-mode .interaction-target.target-hit {
+  border-color: #00ff66;
+  background: rgba(0, 255, 102, 0.24);
+  color: #ffffff;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.interaction-mode .interaction-feedback {
+  position: fixed;
+  top: calc(50% + 4.3rem);
+  left: 50%;
+  z-index: 41;
+  display: block;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  background: rgba(0, 0, 0, 0.72);
+  color: #aaffdd;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  transform: translateX(-50%);
+}
+
+.interaction-mode .interaction-feedback.clicked {
+  color: #00ff66;
+  text-shadow: 0 0 10px #00ff66;
+}
+
+.interaction-mode .back-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 42;
+  display: block;
 }
 
 ::-webkit-scrollbar {

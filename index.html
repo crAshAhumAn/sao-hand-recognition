@@ -58,7 +58,7 @@
         <aside class="result-panel" aria-label="Detection results">
           <div class="results-header">
             <h2>Live detection results</h2>
-            <div id="index-result" class="index-result waiting">Index finger state: not detected</div>
+            <div id="index-result" class="index-result waiting">Landmark status: waiting</div>
           </div>
           <div class="config-card">
             <h3>Detection status</h3>
@@ -74,33 +74,32 @@
               <dd id="hand-state">0</dd>
             </div>
           </dl>
-          <ul id="finger-list" class="finger-list" aria-label="Finger states">
-            <li data-finger="thumb">
-              <div><strong>Thumb</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="index">
-              <div><strong>Index</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="middle">
-              <div><strong>Middle</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="ring">
-              <div><strong>Ring</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-            <li data-finger="pinky">
-              <div><strong>Pinky</strong><small class="finger-angle">Angle: --</small></div>
-              <span class="finger-state">off</span>
-            </li>
-          </ul>
+          <table class="hand-results-table" aria-label="Left and right hand finger states">
+            <thead>
+              <tr>
+                <th>Hand</th>
+                <th>Finger</th>
+                <th>State</th>
+                <th>Angle</th>
+              </tr>
+            </thead>
+            <tbody id="hand-results-body">
+              <tr>
+                <td colspan="4">No hand data available.</td>
+              </tr>
+            </tbody>
+          </table>
+          <button id="interaction-page-button" class="action-btn secondary-action" type="button" disabled>
+            Open interaction screen
+          </button>
           <div id="hands-list" class="hands-list" aria-live="polite">
             <p class="hands-empty">No hand data available.</p>
           </div>
         </aside>
       </section>
+      <button id="interaction-target" class="interaction-target" type="button">Touch target</button>
+      <div id="interaction-feedback" class="interaction-feedback" role="status">Move a fingertip to the target</div>
+      <button id="back-button" class="action-btn back-button" type="button">Back to results</button>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
