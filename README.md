@@ -26,10 +26,14 @@ height remains visible instead of being cropped. Camera startup uses direct
 browser `getUserMedia` access and does not start from page clicks. Press
 **Terminate stream** or `Esc` to release the webcam.
 
+The results panel shows a table with `Fingers`, `Left`, and `Right` columns, and
+the left/right columns only report whether each finger is `on` or `off`.
+
 After both left and right hand landmarks are detected, the **Open interaction
-screen** button becomes available. That view shows the output canvas across the
-screen with a center target; moving any detected fingertip onto the target
-triggers a visible "clicked" feedback response.
+screen** button becomes available and links to `interaction.html`. That second
+page shows the output canvas across the screen with a center target; moving any
+detected fingertip onto the target triggers a visible "clicked" feedback
+response.
 
 ## Python desktop demo setup
 
@@ -69,9 +73,13 @@ finger-detector --no-mirror
 ## How it works
 
 - `index.html` serves the GitHub Pages root.
+- `interaction.html` serves the fullscreen interaction page from the GitHub
+  Pages root.
 - `web/index.html`, `web/styles.css`, and `web/app.js` provide a browser-based
   hand recognition application that tracks up to two hands and labels them as
   left or right.
+- `web/interaction.html` serves the same interaction page when running from the
+  `web/` directory directly.
 - `src/hand_recognition/webcam.py` captures webcam frames and asks MediaPipe for
   21 hand landmarks.
 - `src/hand_recognition/finger_detector.py` checks finger joint angles and

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hand Interaction Screen | Professional Hand Detection</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="interaction">
+    <main class="sao-container">
+      <section class="main-live-area" aria-label="Fullscreen hand interaction">
+        <div class="video-master">
+          <div class="video-frame">
+            <video id="input-video" playsinline></video>
+            <canvas id="output-canvas"></canvas>
+            <div id="empty-state" class="empty-state">
+              <span>Press Initialize camera to start interaction</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="button-bar interaction-start-controls">
+        <button id="start-button" class="action-btn" type="button">Initialize camera</button>
+        <button id="stop-button" class="action-btn" type="button" disabled>Terminate stream</button>
+      </div>
+      <div id="status-message" role="status">
+        System ready. Press Initialize camera to begin interaction.
+      </div>
+
+      <button id="interaction-target" class="interaction-target" type="button">Touch target</button>
+      <div id="interaction-feedback" class="interaction-feedback" role="status">
+        Move a fingertip to the target
+      </div>
+      <a id="back-button" class="action-btn back-button" href="./">Back to results</a>
+
+      <div class="interaction-support" aria-hidden="true">
+        <ol>
+          <li data-step="mediapipe">Load hand detection model</li>
+          <li data-step="camera">Establish camera connection</li>
+          <li data-step="hand">Detect left and right hand landmarks</li>
+          <li data-step="fingers">Compute finger extension states</li>
+        </ol>
+        <div data-hand-slot="Left">Left hand: <span>waiting</span></div>
+        <div data-hand-slot="Right">Right hand: <span>waiting</span></div>
+        <p id="detection-box-label">Detection boxes: waiting</p>
+        <div id="index-result">Awaiting hand landmarks</div>
+        <span id="finger-count">0</span>
+        <span id="hand-state">0</span>
+        <table>
+          <tbody id="hand-results-body"></tbody>
+        </table>
+        <button id="interaction-page-button" type="button" disabled>Open interaction screen</button>
+        <div id="hands-list"></div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

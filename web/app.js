@@ -49,9 +49,11 @@ let isInitializing = false;
 let animationFrameId = null;
 let videoRect = { x: 0, y: 0, width: 1, height: 1 };
 let canvasLocked = false;
-let interactionMode = false;
+const isInteractionPage = document.body.dataset.page === "interaction";
+let interactionMode = isInteractionPage;
 let interactionTriggered = false;
 let latestHandResults = [];
+let bothHandsCompleted = false;
 
 function setStatus(message, state = "") {
   statusMessage.textContent = message;
@@ -348,35 +350,27 @@ function renderHandResultsTable(handResults) {
   if (handResults.length === 0) {
     const row = document.createElement("tr");
     const cell = document.createElement("td");
-    cell.colSpan = 4;
+    cell.colSpan = 3;
     cell.textContent = "No hand data available.";
     row.append(cell);
     handResultsBody.append(row);
     return;
   }
 
-  for (const handName of ["Left", "Right"]) {
-    const handResult = handResults.find((result) => result.handedness === handName);
+  const leftHand = handResults.find((result) => result.handedness === "Left");
+  const rightHand = handResults.find((result) => result.handedness === "Right");
 
-    if (!handResult) {
-      const row = document.createElement("tr");
-      row.className = "missing-hand-row";
-      row.innerHTML = `<td>${handName}</td><td colspan="3">waiting</td>`;
-      handResultsBody.append(row);
-      continue;
-    }
-
-    for (const detection of handResult.state.detections) {
-      const row = document.createElement("tr");
-      row.classList.toggle("active", detection.isExtended);
-      row.innerHTML = `
-        <td>${handName}</td>
-        <td>${detection.name}</td>
-        <td><span class="finger-state">${detection.isExtended ? "on" : "off"}</span></td>
-        <td>${Math.round(detection.angleDegrees)} deg</td>
-      `;
-      handResultsBody.append(row);
-    }
+  for (const [fingerName] of FINGER_SPECS) {
+    const leftDetection = leftHand?.state.byName[fingerName];
+    const rightDetection = rightHand?.state.byName[fingerName];
+    const row = document.createElement("tr");
+    row.classList.toggle("active", Boolean(leftDetection?.isExtended || rightDetection?.isExtended));
+    row.innerHTML = `
+      <td>${fingerName}</td>
+      <td><span class="finger-state">${leftDetection?.isExtended ? "on" : "off"}</span></td>
+      <td><span class="finger-state">${rightDetection?.isExtended ? "on" : "off"}</span></td>
+    `;
+    handResultsBody.append(row);
   }
 }
 
@@ -384,10 +378,17 @@ function updateInteractionAccess(handResults) {
   const hasLeft = handResults.some((result) => result.handedness === "Left");
   const hasRight = handResults.some((result) => result.handedness === "Right");
   const ready = hasLeft && hasRight;
-  interactionPageButton.disabled = !ready;
+  if (ready) {
+    bothHandsCompleted = true;
+    setStep("hand", "done");
+    setStep("fingers", "done");
+  }
+  interactionPageButton.disabled = !bothHandsCompleted;
   interactionPageButton.textContent = ready
     ? "Open interaction screen"
-    : "Detect left and right hands first";
+    : bothHandsCompleted
+      ? "Open interaction screen"
+      : "Detect left and right hands first";
 }
 
 function checkInteractionTarget(handResults) {
@@ -421,6 +422,12 @@ function openInteractionScreen() {
     return;
   }
 
+  const href = interactionPageButton.dataset.interactionHref;
+  if (href) {
+    window.location.href = href;
+    return;
+  }
+
   interactionMode = true;
   interactionTriggered = false;
   document.body.classList.add("interaction-mode");
@@ -430,6 +437,9 @@ function openInteractionScreen() {
 }
 
 function closeInteractionScreen() {
+  if (isInteractionPage) {
+    return;
+  }
   interactionMode = false;
   document.body.classList.remove("interaction-mode");
   interactionFeedback.classList.remove("clicked");
@@ -471,8 +481,13 @@ function resetResults() {
 function drawNoHandFrame() {
   latestHandResults = [];
   resetResults();
-  setStep("hand", "active");
-  setStep("fingers", "");
+  if (bothHandsCompleted) {
+    setStep("hand", "done");
+    setStep("fingers", "done");
+  } else {
+    setStep("hand", "active");
+    setStep("fingers", "");
+  }
   canvasCtx.font = "700 22px monospace";
   canvasCtx.fillStyle = "#ffd166";
   canvasCtx.fillText("Present left hand, right hand, or both hands", 24, 44);
@@ -495,8 +510,13 @@ function onResults(results) {
     return;
   }
 
-  setStep("hand", "done");
-  setStep("fingers", "active");
+  if (bothHandsCompleted) {
+    setStep("hand", "done");
+    setStep("fingers", "done");
+  } else {
+    setStep("hand", "done");
+    setStep("fingers", "active");
+  }
 
   const handResults = detectedHands.slice(0, 2).map((handLandmarks, index) => {
     const handedness = getHandednessLabel(results, handLandmarks, index);
@@ -520,7 +540,9 @@ function onResults(results) {
   latestHandResults = handResults;
   updateResults(handResults);
   checkInteractionTarget(handResults);
-  setStep("fingers", "done");
+  if (bothHandsCompleted) {
+    setStep("fingers", "done");
+  }
   canvasCtx.restore();
 }
 
@@ -558,6 +580,7 @@ async function startCamera() {
 
   try {
     isInitializing = true;
+    bothHandsCompleted = false;
     resetSteps();
     resetResults();
     ensureMediaPipeLoaded();
@@ -588,6 +611,7 @@ async function startCamera() {
     canvasLocked = true;
     updateVideoRect(videoElement);
     isRunning = true;
+    document.body.classList.add("camera-running");
 
     const processFrame = async () => {
       if (!isRunning || !hands) {
@@ -640,7 +664,11 @@ function stopCamera() {
   stopVideoStream();
   canvasLocked = false;
   latestHandResults = [];
-  closeInteractionScreen();
+  bothHandsCompleted = false;
+  document.body.classList.remove("camera-running");
+  if (!isInteractionPage) {
+    closeInteractionScreen();
+  }
   startButton.disabled = false;
   stopButton.disabled = true;
   emptyState.classList.remove("hidden");
@@ -665,5 +693,8 @@ window.addEventListener("keydown", (event) => {
 });
 
 resizeCanvasToDisplaySize();
+if (isInteractionPage) {
+  document.body.classList.add("interaction-page", "interaction-mode");
+}
 resetResults();
 resetSteps();
