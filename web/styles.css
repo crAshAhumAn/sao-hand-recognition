@@ -294,6 +294,7 @@ select {
   object-fit: contain;
   background: #000000;
   border-radius: 1rem;
+  transform: scaleX(-1);
 }
 
 #output-canvas {
