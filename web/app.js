@@ -38,12 +38,20 @@ const HAND_COLORS = {
   Right: "#33ffcc",
   Unknown: "#ffd166",
 };
+const MIRRORED_HANDEDNESS = {
+  Left: "Right",
+  Right: "Left",
+};
+const MIRROR_DISPLAY = true;
+const TARGET_FPS = 15;
+const FRAME_INTERVAL_MS = 1000 / TARGET_FPS;
 
 let hands = null;
 let isRunning = false;
 let isInitializing = false;
 let animationFrameId = null;
 let videoFrameCallbackId = null;
+let lastFrameProcessedAt = 0;
 let videoRect = { x: 0, y: 0, width: 1, height: 1 };
 let canvasLocked = false;
 const isInteractionPage = document.body.dataset.page === "interaction";
@@ -147,7 +155,7 @@ function getHandBoundingBox(landmarks, padding = 0.045) {
   const maxY = Math.min(1, Math.max(...ys) + padding);
 
   return {
-    x: videoRect.x + minX * videoRect.width,
+    x: videoRect.x + (MIRROR_DISPLAY ? 1 - maxX : minX) * videoRect.width,
     y: videoRect.y + minY * videoRect.height,
     width: (maxX - minX) * videoRect.width,
     height: (maxY - minY) * videoRect.height,
@@ -161,10 +169,11 @@ function getHandednessLabel(results, handLandmarks, index) {
     handedness?.label ?? handedness?.classification?.[0]?.label ?? handedness?.[0]?.label;
 
   if (label === "Left" || label === "Right") {
-    return label;
+    return MIRROR_DISPLAY ? MIRRORED_HANDEDNESS[label] : label;
   }
 
-  return handLandmarks[0]?.x < 0.5 ? "Right" : "Left";
+  const appearsOnLeft = MIRROR_DISPLAY ? handLandmarks[0]?.x > 0.5 : handLandmarks[0]?.x < 0.5;
+  return appearsOnLeft ? "Left" : "Right";
 }
 
 function resizeCanvasToDisplaySize({ force = false } = {}) {
@@ -205,10 +214,24 @@ function updateVideoRect(source) {
 }
 
 function mapLandmark(point) {
+  const normalizedX = MIRROR_DISPLAY ? 1 - point.x : point.x;
   return {
-    x: videoRect.x + point.x * videoRect.width,
+    x: videoRect.x + normalizedX * videoRect.width,
     y: videoRect.y + point.y * videoRect.height,
   };
+}
+
+function drawVideoFrame(image) {
+  if (!MIRROR_DISPLAY) {
+    canvasCtx.drawImage(image, videoRect.x, videoRect.y, videoRect.width, videoRect.height);
+    return;
+  }
+
+  canvasCtx.save();
+  canvasCtx.translate(videoRect.x + videoRect.width, videoRect.y);
+  canvasCtx.scale(-1, 1);
+  canvasCtx.drawImage(image, 0, 0, videoRect.width, videoRect.height);
+  canvasCtx.restore();
 }
 
 function canvasPointToViewport(point) {
@@ -500,7 +523,7 @@ function onResults(results) {
   updateVideoRect(results.image);
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(results.image, videoRect.x, videoRect.y, videoRect.width, videoRect.height);
+  drawVideoFrame(results.image);
 
   const detectedHands = results.multiHandLandmarks ?? [];
   if (detectedHands.length === 0) {
@@ -624,8 +647,14 @@ async function startCamera() {
       }
     };
 
-    const processFrame = async () => {
+    const processFrame = async (now = performance.now()) => {
       if (!isRunning || !hands) {
+        return;
+      }
+      const timestamp = typeof now === "number" ? now : performance.now();
+
+      if (timestamp - lastFrameProcessedAt < FRAME_INTERVAL_MS) {
+        scheduleFrame();
         return;
       }
 
@@ -636,6 +665,7 @@ async function startCamera() {
 
       try {
         isProcessingFrame = true;
+        lastFrameProcessedAt = timestamp;
         await hands.send({ image: videoElement });
       } catch (error) {
         console.error(error);
@@ -674,6 +704,7 @@ function stopVideoStream() {
     videoFrameCallbackId = null;
   }
   isProcessingFrame = false;
+  lastFrameProcessedAt = 0;
 
   const stream = videoElement.srcObject;
   if (stream && typeof stream.getTracks === "function") {
