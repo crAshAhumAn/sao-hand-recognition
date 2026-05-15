@@ -1,8 +1,8 @@
 # sao-hand-recognition
 
-Starter code for hand recognition. The first milestone is finger detection:
-the browser app locates left and/or right hands with MediaPipe, labels each hand,
-detects index fingers first, then reports all extended fingers.
+Starter code for hand recognition. The browser app locates left and/or right
+hands with MediaPipe, labels each hand, detects index fingers first, then reports
+all extended fingers.
 
 ## Run the website
 
@@ -17,13 +17,12 @@ serve it from `localhost` or HTTPS:
 python3 -m http.server 6463
 ```
 
-Open <http://localhost:6463>, press **Initialize scanner** to turn on the
-camera, and show your left hand, right hand, or both hands. The page displays
-the title at the top, setup instructions below it, scanner buttons below the
-instructions, then a large viewport-sized camera frame with live detection
-results in a separate right-side panel. It also shows left/right hand status,
-per-hand finger configuration, and a separate labeled detection box around each
-hand captured by the camera. Press **Stop scanner** or `Esc` to release the
+Open <http://localhost:6463>, press **Initialize camera** to turn on the camera,
+and show your left hand, right hand, or both hands. The page uses a professional
+HUD-style interface with a top title, initialization protocol, camera controls,
+a taller live video frame, and live detection results in a separate right-side
+panel. Camera startup uses direct browser `getUserMedia` access and does not
+start from page clicks. Press **Terminate stream** or `Esc` to release the
 webcam.
 
 ## Python desktop demo setup
@@ -63,11 +62,12 @@ finger-detector --no-mirror
 
 ## How it works
 
+- `index.html` serves the GitHub Pages root.
 - `web/index.html`, `web/styles.css`, and `web/app.js` provide a browser-based
   hand recognition application that tracks up to two hands and labels them as
   left or right.
-- `src/hand_recognition/webcam.py` captures webcam frames and asks MediaPipe
-  for 21 hand landmarks.
+- `src/hand_recognition/webcam.py` captures webcam frames and asks MediaPipe for
+  21 hand landmarks.
 - `src/hand_recognition/finger_detector.py` checks finger joint angles and
   fingertip distance from the wrist. This makes the basic heuristic less
   sensitive to hand rotation than a simple up/down pixel check.
