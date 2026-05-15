@@ -77,19 +77,24 @@
           <table class="hand-results-table" aria-label="Left and right hand finger states">
             <thead>
               <tr>
-                <th>Hand</th>
-                <th>Finger</th>
-                <th>State</th>
-                <th>Angle</th>
+                <th>Fingers</th>
+                <th>Left</th>
+                <th>Right</th>
               </tr>
             </thead>
             <tbody id="hand-results-body">
               <tr>
-                <td colspan="4">No hand data available.</td>
+                <td colspan="3">No hand data available.</td>
               </tr>
             </tbody>
           </table>
-          <button id="interaction-page-button" class="action-btn secondary-action" type="button" disabled>
+          <button
+            id="interaction-page-button"
+            class="action-btn secondary-action"
+            type="button"
+            data-interaction-href="./interaction.html"
+            disabled
+          >
             Open interaction screen
           </button>
           <div id="hands-list" class="hands-list" aria-live="polite">

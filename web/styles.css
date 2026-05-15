@@ -559,9 +559,12 @@ select {
 
 .interaction-mode .sao-header,
 .interaction-mode .setup-instruction,
-.interaction-mode .button-bar,
 .interaction-mode #status-message,
 .interaction-mode .result-panel {
+  display: none;
+}
+
+.interaction-mode .button-bar {
   display: none;
 }
 
@@ -607,6 +610,35 @@ select {
   font-weight: 800;
   text-transform: uppercase;
   transform: translate(-50%, -50%);
+}
+
+.interaction-page:not(.camera-running) .interaction-target,
+.interaction-page:not(.camera-running) .interaction-feedback {
+  display: none;
+}
+
+.interaction-page:not(.camera-running) .button-bar {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 45;
+  display: flex;
+  transform: translate(-50%, -50%);
+}
+
+.interaction-page:not(.camera-running) #status-message {
+  position: fixed;
+  top: calc(50% + 3.2rem);
+  left: 50%;
+  z-index: 45;
+  display: block;
+  min-width: min(90vw, 520px);
+  transform: translateX(-50%);
+}
+
+.interaction-page.camera-running .button-bar,
+.interaction-page.camera-running #status-message {
+  display: none;
 }
 
 .interaction-mode .interaction-target.target-hit {
